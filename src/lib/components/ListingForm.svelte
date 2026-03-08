@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { supabase } from '$lib/supabase';
-	import { getUser } from '$lib/auth';
+	import { getUser } from '$lib/auth.svelte';
 	import { boats } from '$lib/seed-data';
 	import type { ConditionTier, LocationMarket, SailsCondition } from '$lib/types';
 

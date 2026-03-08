@@ -1,7 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { onMount } from 'svelte';
-	import { initAuth } from '$lib/auth';
+	import { initAuth } from '$lib/auth.svelte';
 	import AuthButton from '$lib/components/AuthButton.svelte';
 
 	let { children } = $props();

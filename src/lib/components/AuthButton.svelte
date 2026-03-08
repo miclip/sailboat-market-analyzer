@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getUser, signInWithEmail, signOut } from '$lib/auth';
+	import { getUser, signInWithEmail, signOut } from '$lib/auth.svelte';
 
 	let email = $state('');
 	let showForm = $state(false);
