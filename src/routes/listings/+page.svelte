@@ -48,13 +48,11 @@
 		error = '';
 
 		try {
-			const { searchListings } = await import('$lib/boattrader');
+			const { fetchListingById } = await import('$lib/listing-lookup');
 
 			for (const item of items) {
-				const result = await searchListings(item.make, item.model, 1, 50);
-				const match = result.listings.find((l) => l.id === item.boattrader_id);
+				const match = await fetchListingById(item.boattrader_id);
 
-				const newStatus = match ? 'active' : 'not_found';
 				const newPrice = match?.priceUSD ?? null;
 				const priceChanged =
 					newPrice !== null && item.last_asking_price !== null && newPrice !== item.last_asking_price;
@@ -75,6 +73,7 @@
 				if (match) {
 					updates.last_location_city = match.city || item.last_location_city;
 					updates.last_location_state = match.state || item.last_location_state;
+					updates.listing_url = match.url || item.listing_url;
 				}
 
 				await supabase.from('watchlist').update(updates).eq('id', item.id);

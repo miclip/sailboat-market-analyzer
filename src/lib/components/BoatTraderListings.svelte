@@ -64,7 +64,14 @@
 			last_checked_at: new Date().toISOString()
 		});
 
-		if (!err) {
+		if (err) {
+			if (err.code === '23505') {
+				// Already tracked (unique constraint)
+				trackedIds = new Set([...trackedIds, listing.id]);
+			} else {
+				error = err.message;
+			}
+		} else {
 			// Record initial price snapshot
 			const { data: newItem } = await supabase
 				.from('watchlist')

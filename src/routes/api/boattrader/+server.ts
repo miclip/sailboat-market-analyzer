@@ -1,8 +1,9 @@
 import { json } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 
 const API_BASE = 'https://api-gateway.boats.com/api-boattrader-client/app/search/boat';
-const API_KEY = '8b08b9bc353c494a80c60fb86debfc56';
+const API_KEY = env.BOATTRADER_API_KEY ?? '';
 
 export const GET: RequestHandler = async ({ url }) => {
 	const make = url.searchParams.get('make');

@@ -49,7 +49,7 @@ create table boats (
 -- Use-case scores (computed + stored, refreshable)
 create table boat_scores (
   id uuid primary key default gen_random_uuid(),
-  boat_id uuid references boats(id) on delete cascade,
+  boat_id text references boats(id) on delete cascade,
 
   score_coastal_cruising int,
   score_bluewater int,
@@ -67,7 +67,7 @@ create table boat_scores (
 -- Community-submitted listings
 create table listings (
   id uuid primary key default gen_random_uuid(),
-  boat_id uuid references boats(id),
+  boat_id text references boats(id),
 
   yachtworld_url text unique,
   asking_price int,
