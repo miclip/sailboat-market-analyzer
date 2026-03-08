@@ -4,21 +4,24 @@
 	import { formatCurrency } from '$lib/utils';
 	import type { WatchlistItem, PriceSnapshot } from '$lib/types';
 	import type { BoatTraderListing } from '$lib/boattrader';
-	import { onMount } from 'svelte';
-
 	let items = $state<WatchlistItem[]>([]);
 	let loading = $state(true);
 	let refreshing = $state(false);
 	let error = $state('');
+	let loaded = $state(false);
 
 	const user = $derived(getUser());
 
-	onMount(async () => {
+	$effect(() => {
+		if (user && !loaded) {
+			loaded = true;
+			loadWatchlist();
+		}
 		if (!user) {
 			loading = false;
-			return;
+			loaded = false;
+			items = [];
 		}
-		await loadWatchlist();
 	});
 
 	async function loadWatchlist() {
