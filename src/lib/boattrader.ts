@@ -22,6 +22,7 @@ interface BTRecord {
 	make: string;
 	model: string;
 	year: number;
+	portalLink?: string;
 	price?: {
 		hidden: boolean;
 		type?: {
@@ -76,9 +77,7 @@ export function parseRecord(r: BTRecord): BoatTraderListing {
 		draftFt: dims?.maxDraft?.ft ?? null,
 		cabins: r.specifications?.accommodation?.cabins ?? null,
 		heads: r.specifications?.accommodation?.heads ?? null,
-		url: `https://www.boattrader.com/boat/${r.year}-${r.make}-${r.model}-${r.id}/`
-			.toLowerCase()
-			.replace(/\s+/g, '-')
+		url: r.portalLink ?? `https://www.boattrader.com/boat/${r.id}/`
 	};
 }
 
