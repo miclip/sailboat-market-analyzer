@@ -59,6 +59,7 @@
 			last_asking_price: listing.priceUSD,
 			last_location_city: listing.city,
 			last_location_state: listing.state,
+			listing_url: listing.url,
 			status: 'active',
 			last_checked_at: new Date().toISOString()
 		});

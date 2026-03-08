@@ -142,6 +142,7 @@ export interface WatchlistItem {
 	last_location_state?: string;
 	last_checked_at?: string;
 	status: WatchlistStatus;
+	listing_url?: string;
 	notes?: string;
 	created_at: string;
 }

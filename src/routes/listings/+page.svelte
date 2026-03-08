@@ -209,7 +209,7 @@
 					{/if}
 					<div class="mt-3 flex items-center gap-3">
 						<a
-							href="https://www.boattrader.com/boat/{item.boattrader_id}/"
+							href={item.listing_url ?? `https://www.boattrader.com/boat/${item.boattrader_id}/`}
 							target="_blank"
 							rel="noopener noreferrer"
 							class="text-xs text-blue-600 hover:text-blue-800"

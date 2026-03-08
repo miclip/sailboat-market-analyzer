@@ -134,6 +134,7 @@
 			last_asking_price: listing.priceUSD,
 			last_location_city: listing.city,
 			last_location_state: listing.state,
+			listing_url: listing.url,
 			status: 'active',
 			last_checked_at: new Date().toISOString()
 		});
@@ -231,7 +232,7 @@
 						</div>
 						<div class="mt-3 flex gap-3">
 							<a
-								href="https://www.boattrader.com/boat/{item.boattrader_id}/"
+								href={item.listing_url ?? `https://www.boattrader.com/boat/${item.boattrader_id}/`}
 								target="_blank"
 								rel="noopener noreferrer"
 								class="text-xs text-blue-600 hover:text-blue-800"
