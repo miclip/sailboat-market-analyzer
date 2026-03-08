@@ -74,7 +74,7 @@ create table listings (
   list_date date,
   delist_date date,
   days_on_market int generated always as (
-    extract(day from delist_date - list_date)::int
+    (delist_date - list_date)
   ) stored,
 
   location_city text,

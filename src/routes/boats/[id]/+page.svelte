@@ -1,13 +1,20 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import { boats } from '$lib/seed-data';
 	import { computeScores } from '$lib/scoring';
 	import { buildPrompt } from '$lib/prompt-builder';
-	import type { Boat, BoatScores } from '$lib/types';
+	import { supabase } from '$lib/supabase';
+	import { scoreComps } from '$lib/comp-finder';
+	import type { Boat, BoatScores, Listing, Comp } from '$lib/types';
+	import type { CompScore } from '$lib/comp-finder';
 	import BoatCard from '$lib/components/BoatCard.svelte';
 	import ScoreRadar from '$lib/components/ScoreRadar.svelte';
 	import ScoreBreakdown from '$lib/components/ScoreBreakdown.svelte';
 	import PromptOutput from '$lib/components/PromptOutput.svelte';
+	import CompList from '$lib/components/CompList.svelte';
+	import SalePriceForm from '$lib/components/SalePriceForm.svelte';
+	import { formatCurrency, formatLabel } from '$lib/utils';
 
 	const boat = $derived(boats.find((b) => b.id === page.params.id));
 	const scores = $derived(boat ? computeScores(boat) : null);
@@ -17,17 +24,57 @@
 	let experience = $state('intermediate');
 	let targetWaters = $state('Pacific Ocean');
 
+	let listings = $state<Listing[]>([]);
+	let reportedComps = $state<Comp[]>([]);
+	let compScores = $state<CompScore[]>([]);
+	let loadingListings = $state(true);
+
 	const prompt = $derived(
 		boat && scores
 			? buildPrompt({
 					boat,
 					scores,
+					listing: listings[0],
 					use_case_primary: useCase,
 					experience_level: experience,
 					target_waters: targetWaters
 				})
 			: ''
 	);
+
+	onMount(async () => {
+		if (!boat) return;
+
+		// Fetch listings for this boat design
+		const { data: listingData } = await supabase
+			.from('listings')
+			.select('*')
+			.eq('boat_id', boat.id)
+			.order('created_at', { ascending: false });
+
+		listings = listingData ?? [];
+
+		// Score comps if we have listings
+		if (listings.length > 1) {
+			compScores = scoreComps(listings[0], listings, boat.year_range_start, boat.year_range_end);
+		}
+
+		// Fetch reported sale prices for these listings
+		if (listings.length > 0) {
+			const listingIds = listings.map((l) => l.id);
+			const { data: compData } = await supabase
+				.from('comps')
+				.select('*')
+				.in('listing_id', listingIds)
+				.order('submitted_at', { ascending: false });
+
+			reportedComps = compData ?? [];
+		}
+
+		loadingListings = false;
+	});
+
+	let showSalePriceForm = $state<string | null>(null);
 </script>
 
 {#if boat && scores}
@@ -55,6 +102,101 @@
 			<h2 class="mb-4 text-lg font-semibold text-gray-900">Score Breakdown</h2>
 			<ScoreBreakdown {scores} />
 		</div>
+
+		<!-- Listings section -->
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+			<div class="mb-4 flex items-center justify-between">
+				<h2 class="text-lg font-semibold text-gray-900">Active Listings</h2>
+				<a
+					href="/listings/submit"
+					class="text-sm text-blue-600 hover:text-blue-800"
+				>
+					Submit a listing
+				</a>
+			</div>
+
+			{#if loadingListings}
+				<div class="py-6 text-center">
+					<div class="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
+				</div>
+			{:else if listings.length === 0}
+				<p class="text-sm text-gray-500">No listings yet for this design.</p>
+			{:else}
+				<div class="space-y-3">
+					{#each listings as listing}
+						<div class="rounded-lg border border-gray-100 bg-gray-50 p-4">
+							<div class="flex items-start justify-between">
+								<div>
+									{#if listing.asking_price}
+										<div class="text-lg font-bold text-blue-600">{formatCurrency(listing.asking_price)}</div>
+									{/if}
+									<div class="mt-1 text-sm text-gray-600">
+										{[listing.location_city, listing.location_state].filter(Boolean).join(', ') || 'Location unknown'}
+										{#if listing.location_market}
+											&middot; {formatLabel(listing.location_market)}
+										{/if}
+									</div>
+									<div class="mt-1 text-xs text-gray-500">
+										{#if listing.condition_tier}
+											{formatLabel(listing.condition_tier)}
+										{/if}
+										{#if listing.engine_hours != null}
+											&middot; {listing.engine_hours} engine hrs
+										{/if}
+										{#if listing.rigging_age_years != null}
+											&middot; Rigging: {listing.rigging_age_years}yr
+										{/if}
+									</div>
+								</div>
+								<div class="flex flex-col items-end gap-2">
+									<span
+										class="rounded px-2 py-0.5 text-xs font-medium
+											{listing.status === 'active'
+											? 'bg-green-50 text-green-700'
+											: listing.status === 'sold'
+												? 'bg-gray-100 text-gray-600'
+												: 'bg-yellow-50 text-yellow-700'}"
+									>
+										{formatLabel(listing.status)}
+									</span>
+									{#if listing.yachtworld_url}
+										<a
+											href={listing.yachtworld_url}
+											target="_blank"
+											rel="noopener noreferrer"
+											class="text-xs text-blue-600 hover:text-blue-800"
+										>
+											View on YachtWorld
+										</a>
+									{/if}
+									<button
+										onclick={() =>
+											(showSalePriceForm =
+												showSalePriceForm === listing.id ? null : listing.id)}
+										class="text-xs text-gray-500 hover:text-blue-600"
+									>
+										Report sale price
+									</button>
+								</div>
+							</div>
+							{#if showSalePriceForm === listing.id}
+								<div class="mt-4 border-t border-gray-200 pt-4">
+									<SalePriceForm listingId={listing.id} />
+								</div>
+							{/if}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
+
+		<!-- Comp data section -->
+		{#if !loadingListings && (compScores.length > 0 || reportedComps.length > 0)}
+			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+				<h2 class="mb-4 text-lg font-semibold text-gray-900">Comparable Sales</h2>
+				<CompList {compScores} {reportedComps} />
+			</div>
+		{/if}
 
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="mb-4 text-lg font-semibold text-gray-900">Generate Claude Analysis</h2>
