@@ -15,14 +15,17 @@
 	let error = $state('');
 
 	$effect(() => {
-		loadListings();
+		// Read props synchronously so Svelte tracks them as dependencies
+		const m = make;
+		const mod = model;
+		loadListings(m, mod);
 	});
 
-	async function loadListings() {
+	async function loadListings(m: string, mod?: string) {
 		loading = true;
 		error = '';
 		try {
-			const result = await searchListings(make, model);
+			const result = await searchListings(m, mod);
 			listings = result.listings;
 			total = result.total;
 		} catch (e) {
