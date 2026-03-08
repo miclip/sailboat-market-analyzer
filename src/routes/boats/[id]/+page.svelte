@@ -15,8 +15,14 @@
 	import CompList from '$lib/components/CompList.svelte';
 	import SalePriceForm from '$lib/components/SalePriceForm.svelte';
 	import { formatCurrency, formatLabel } from '$lib/utils';
+	import BoatTraderListings from '$lib/components/BoatTraderListings.svelte';
 
 	const boat = $derived(boats.find((b) => b.id === page.params.id));
+
+	// Extract model name by removing manufacturer prefix from design_name
+	const btModel = $derived(
+		boat ? boat.design_name.replace(new RegExp('^' + boat.manufacturer + '\\s*', 'i'), '') : ''
+	);
 	const scores = $derived(boat ? computeScores(boat) : null);
 
 	let showPrompt = $state(false);
@@ -103,7 +109,13 @@
 			<ScoreBreakdown {scores} />
 		</div>
 
-		<!-- Listings section -->
+		<!-- BoatTrader listings -->
+		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+			<h2 class="mb-4 text-lg font-semibold text-gray-900">For Sale on BoatTrader</h2>
+			<BoatTraderListings make={boat.manufacturer} model={btModel} />
+		</div>
+
+		<!-- Community listings section -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<div class="mb-4 flex items-center justify-between">
 				<h2 class="text-lg font-semibold text-gray-900">Active Listings</h2>

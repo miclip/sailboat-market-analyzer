@@ -1,0 +1,126 @@
+const API_BASE = 'https://api-gateway.boats.com/api-boattrader-client/app/search/boat';
+const API_KEY = '8b08b9bc353c494a80c60fb86debfc56';
+
+export interface BoatTraderListing {
+	id: number;
+	make: string;
+	model: string;
+	year: number;
+	priceUSD: number | null;
+	priceHidden: boolean;
+	city: string;
+	state: string;
+	country: string;
+	lengthFt: number | null;
+	beamFt: number | null;
+	displacementLbs: number | null;
+	draftFt: number | null;
+	cabins: number | null;
+	heads: number | null;
+	url: string;
+}
+
+interface BTRecord {
+	id: number;
+	make: string;
+	model: string;
+	year: number;
+	price?: {
+		hidden: boolean;
+		type?: {
+			amount?: {
+				USD?: number;
+			};
+		};
+	};
+	location?: {
+		address?: {
+			city?: string;
+			state?: string;
+			country?: string;
+		};
+	};
+	specifications?: {
+		dimensions?: {
+			lengths?: {
+				nominal?: { ft?: number };
+				overall?: { ft?: number };
+			};
+			beam?: { ft?: number };
+			maxDraft?: { ft?: number };
+		};
+		weights?: {
+			displacement?: { lb?: number };
+		};
+		accommodation?: {
+			cabins?: number;
+			heads?: number;
+		};
+	};
+}
+
+function parseRecord(r: BTRecord): BoatTraderListing {
+	const dims = r.specifications?.dimensions;
+	const lengthFt = dims?.lengths?.overall?.ft ?? dims?.lengths?.nominal?.ft ?? null;
+
+	return {
+		id: r.id,
+		make: r.make,
+		model: r.model,
+		year: r.year,
+		priceUSD: r.price?.type?.amount?.USD ?? null,
+		priceHidden: r.price?.hidden ?? true,
+		city: r.location?.address?.city ?? '',
+		state: r.location?.address?.state ?? '',
+		country: r.location?.address?.country ?? '',
+		lengthFt,
+		beamFt: dims?.beam?.ft ?? null,
+		displacementLbs: r.specifications?.weights?.displacement?.lb ?? null,
+		draftFt: dims?.maxDraft?.ft ?? null,
+		cabins: r.specifications?.accommodation?.cabins ?? null,
+		heads: r.specifications?.accommodation?.heads ?? null,
+		url: `https://www.boattrader.com/boat/${r.year}-${r.make}-${r.model}-${r.id}/`.toLowerCase().replace(/\s+/g, '-')
+	};
+}
+
+export async function searchListings(
+	make: string,
+	model?: string,
+	page = 1,
+	pageSize = 20
+): Promise<{ listings: BoatTraderListing[]; total: number }> {
+	const params = new URLSearchParams({
+		apikey: API_KEY,
+		country: 'US',
+		page: String(page),
+		pageSize: String(pageSize),
+		sort: 'modified-desc',
+		make,
+		fields: [
+			'id', 'make', 'model', 'year',
+			'price', 'location', 'specifications'
+		].join(',')
+	});
+
+	if (model) {
+		params.set('model', model);
+	}
+
+	const res = await fetch(`${API_BASE}?${params}`, {
+		headers: {
+			Accept: 'application/json'
+		}
+	});
+
+	if (!res.ok) {
+		throw new Error(`BoatTrader API error: ${res.status}`);
+	}
+
+	const data = await res.json();
+	const records: BTRecord[] = data.search?.records ?? [];
+
+	return {
+		listings: records.map(parseRecord),
+		total: data.search?.count ?? 0
+	};
+}
