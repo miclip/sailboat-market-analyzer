@@ -26,7 +26,38 @@
 
 	const user = $derived(getUser());
 
-	// Map use case to primary score dimension
+	// Map use case to score dimension weights
+	const useCaseWeights: Record<string, Partial<Record<keyof BoatScores, number>>> = {
+		bluewater: { score_bluewater: 0.7, score_singlehand: 0.15, score_liveaboard: 0.15 },
+		pacific: { score_pacific_ready: 0.5, score_bluewater: 0.25, score_liveaboard: 0.25 },
+		coastal: { score_coastal_cruising: 0.6, score_liveaboard: 0.2, score_upwind: 0.2 },
+		liveaboard: { score_liveaboard: 0.6, score_coastal_cruising: 0.2, score_bluewater: 0.2 },
+		singlehand: { score_singlehand: 0.7, score_bluewater: 0.15, score_coastal_cruising: 0.15 },
+		circumnavigation: { score_bluewater: 0.4, score_pacific_ready: 0.3, score_singlehand: 0.3 }
+	};
+
+	// Experience adjusts how much singlehand/ease-of-handling matters
+	const experienceBoost: Record<string, Partial<Record<keyof BoatScores, number>>> = {
+		beginner: { score_singlehand: 0.2, score_coastal_cruising: 0.1 },
+		intermediate: { score_singlehand: 0.1 },
+		experienced: {},
+		professional: { score_bluewater: 0.1 }
+	};
+
+	// Waters boost — shallow/protected waters favor coastal, open ocean favors bluewater
+	const watersBoost: Record<string, Partial<Record<keyof BoatScores, number>>> = {
+		'Pacific Ocean': { score_bluewater: 0.15, score_downwind: 0.1 },
+		'Atlantic Ocean': { score_bluewater: 0.15, score_upwind: 0.1 },
+		Caribbean: { score_coastal_cruising: 0.2, score_liveaboard: 0.1 },
+		Mediterranean: { score_coastal_cruising: 0.15, score_upwind: 0.1 },
+		'Pacific Northwest': { score_coastal_cruising: 0.1, score_upwind: 0.1 },
+		'New England Coast': { score_coastal_cruising: 0.1, score_upwind: 0.1 },
+		'Gulf Coast': { score_coastal_cruising: 0.15, score_liveaboard: 0.1 },
+		'Great Lakes': { score_coastal_cruising: 0.2 },
+		'Around the World': { score_bluewater: 0.15, score_singlehand: 0.1 }
+	};
+
+	// Primary score key for display
 	const useCaseToScore: Record<string, keyof BoatScores> = {
 		bluewater: 'score_bluewater',
 		pacific: 'score_pacific_ready',
@@ -36,10 +67,33 @@
 		circumnavigation: 'score_pacific_ready'
 	};
 
+	function compositeScore(scores: BoatScores): number {
+		const baseWeights = useCaseWeights[useCase] ?? { score_bluewater: 1 };
+		const expBoost = experienceBoost[experience] ?? {};
+		const watBoost = watersBoost[waters] ?? {};
+
+		// Merge weights, then normalize
+		const merged: Record<string, number> = {};
+		for (const [k, w] of Object.entries(baseWeights)) merged[k] = (merged[k] ?? 0) + w;
+		for (const [k, w] of Object.entries(expBoost)) merged[k] = (merged[k] ?? 0) + w;
+		for (const [k, w] of Object.entries(watBoost)) merged[k] = (merged[k] ?? 0) + w;
+
+		const totalWeight = Object.values(merged).reduce((s, w) => s + w, 0);
+		let total = 0;
+		for (const [k, w] of Object.entries(merged)) {
+			total += (scores[k as keyof BoatScores] as number) * (w / totalWeight);
+		}
+		return Math.round(total);
+	}
+
 	const rankedDesigns = $derived(() => {
-		const key = useCaseToScore[useCase] ?? 'score_bluewater';
+		// Touch reactive vars so Svelte tracks them
+		const _uc = useCase;
+		const _exp = experience;
+		const _wat = waters;
 		return scoredBoats
-			.toSorted((a, b) => (b.scores[key] as number) - (a.scores[key] as number));
+			.map((sb) => ({ ...sb, composite: compositeScore(sb.scores) }))
+			.toSorted((a, b) => b.composite - a.composite);
 	});
 
 	function handleUseCaseSubmit(uc: string, exp: string, w: string) {
@@ -111,14 +165,13 @@
 					Top Designs for {formatLabel(useCase)}
 				</h1>
 				<p class="text-sm text-gray-500">
-					Ranked by {formatLabel(useCase)} score. Click a design to see full specs, scores, and live listings.
+					Ranked for {formatLabel(useCase)} ({formatLabel(experience)} level). Click a design to see full specs, scores, and live listings.
 				</p>
 			</div>
 
 			<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-				{#each rankedDesigns() as { boat, scores }, i}
-					{@const key = useCaseToScore[useCase] ?? 'score_bluewater'}
-					{@const score = scores[key] as number}
+				{#each rankedDesigns() as { boat, scores, composite }, i}
+					{@const score = composite}
 					<a
 						href="/boats/{boat.id}"
 						class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm hover:border-blue-300 hover:shadow transition-all"
