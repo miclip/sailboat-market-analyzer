@@ -1,2 +1,14 @@
-[project]
-id = "uagfdjhvmwngmuxhbcxh"
+project_id = "sailboat-market-analyzer"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public", "storage", "graphql_public"]
+
+[db]
+port = 54322
+major_version = 15
+
+[auth]
+enabled = true
+site_url = "http://127.0.0.1:3000"
