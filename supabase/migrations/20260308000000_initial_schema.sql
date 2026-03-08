@@ -1,6 +1,6 @@
 -- Core boat design specs (curated, admin-managed)
 create table boats (
-  id uuid primary key default gen_random_uuid(),
+  id text primary key,
   design_name text not null,
   manufacturer text not null,
   year_range_start int,

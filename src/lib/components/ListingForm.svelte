@@ -7,7 +7,7 @@
 	let boatId = $state('');
 	let yachtworldUrl = $state('');
 	let askingPrice = $state<number | undefined>();
-	let listDate = $state('');
+	let listDate = $state(new Date().toISOString().split('T')[0]);
 	let locationCity = $state('');
 	let locationState = $state('');
 	let locationMarket = $state<LocationMarket | ''>('');
