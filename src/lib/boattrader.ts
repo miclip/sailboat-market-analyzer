@@ -105,16 +105,10 @@ export async function searchListings(
 
 	const data = await res.json();
 	const records: BTRecord[] = data.search?.records ?? [];
-	let listings = records.map(parseRecord);
-
-	// API does fuzzy model matching — filter to exact model match
-	if (model) {
-		const m = model.toLowerCase();
-		listings = listings.filter((l) => l.model.toLowerCase() === m);
-	}
+	const listings = records.map(parseRecord);
 
 	return {
 		listings,
-		total: listings.length
+		total: data.search?.count ?? 0
 	};
 }
