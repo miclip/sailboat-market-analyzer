@@ -126,3 +126,32 @@ export interface PromptInputs {
 	experience_level: string;
 	target_waters: string;
 }
+
+export type WatchlistStatus = 'active' | 'sold' | 'delisted' | 'price_changed' | 'unknown';
+
+export interface WatchlistItem {
+	id: string;
+	user_id: string;
+	boattrader_id: number;
+	boat_design_id?: string;
+	make: string;
+	model: string;
+	year?: number;
+	last_asking_price?: number;
+	last_location_city?: string;
+	last_location_state?: string;
+	last_checked_at?: string;
+	status: WatchlistStatus;
+	notes?: string;
+	created_at: string;
+}
+
+export type PriceSnapshotStatus = 'active' | 'not_found';
+
+export interface PriceSnapshot {
+	id: string;
+	watchlist_id: string;
+	asking_price?: number;
+	status?: PriceSnapshotStatus;
+	snapshot_at: string;
+}
