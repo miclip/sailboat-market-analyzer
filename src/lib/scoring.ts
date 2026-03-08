@@ -200,6 +200,48 @@ function scoreBeamLiveaboard(boat: Boat): { points: number; value: string } {
 	return { points: Math.round(points), value: `${beam}ft` };
 }
 
+function scoreEaseOfHandling(boat: Boat): { points: number; value: string } {
+	let points = 50;
+	const factors: string[] = [];
+
+	// Smaller boats are easier to handle
+	const loa = boat.length_ft;
+	if (loa != null) {
+		if (loa <= 36) { points += 20; factors.push('compact'); }
+		else if (loa <= 42) { points += 10; factors.push('moderate size'); }
+		else if (loa <= 48) { points -= 5; }
+		else { points -= 20; factors.push('large'); }
+	}
+
+	// Sloop is simplest, ketch/cutter more complex
+	if (boat.rig_type === 'sloop') { points += 15; factors.push('simple rig'); }
+	else if (boat.rig_type === 'cutter') { points += 5; }
+	else if (boat.rig_type === 'ketch') { points -= 5; factors.push('complex rig'); }
+
+	// Deck-stepped masts are easier to service
+	if (boat.mast_step === 'deck_stepped') { points += 10; factors.push('deck stepped'); }
+
+	// Lighter boats are easier to dock/maneuver
+	const disp = boat.displacement_lbs;
+	if (disp != null) {
+		if (disp < 16000) { points += 10; factors.push('light'); }
+		else if (disp > 25000) { points -= 10; factors.push('heavy'); }
+	}
+
+	return { points: clamp(Math.round(points), 0, 100), value: factors.join(', ') || 'average' };
+}
+
+function scoreSizeCoastal(boat: Boat): { points: number; value: string } {
+	const loa = boat.length_ft;
+	if (loa == null) return { points: 50, value: 'unknown' };
+	// 34-42ft is sweet spot for coastal cruising
+	let points: number;
+	if (loa < 34) points = lerp(loa, 28, 34, 40, 90);
+	else if (loa <= 42) points = lerp(loa, 34, 42, 100, 85);
+	else points = lerp(loa, 42, 55, 85, 30);
+	return { points: clamp(Math.round(points), 0, 100), value: `${loa}ft` };
+}
+
 function weighted(items: { points: number; weight: number }[]): number {
 	return Math.round(items.reduce((sum, item) => sum + item.points * item.weight, 0));
 }
@@ -259,12 +301,13 @@ export function computeScores(boat: Boat): BoatScores {
 		score_bluewater * 0.6 + score_singlehand * 0.2 + score_liveaboard * 0.2
 	);
 
-	// Coastal Cruising — lighter scoring, broader appeal
-	const ccMCR = { ...scoreMotionComfort(boat), factor: 'Motion Comfort', weight: 0.3 };
-	const ccSize = { ...scoreLiveaboard(boat), factor: 'LOA', weight: 0.25 };
-	const ccSAD = { ...scoreSAD(boat), factor: 'SA/D Ratio', weight: 0.25 };
-	const ccBeam = { ...scoreBeamLiveaboard(boat), factor: 'Beam', weight: 0.2 };
-	const coastalItems = [ccMCR, ccSize, ccSAD, ccBeam];
+	// Coastal Cruising — ease of handling, right-sized, good performance
+	const ccEase = { ...scoreEaseOfHandling(boat), factor: 'Ease of Handling', weight: 0.3 };
+	const ccSize = { ...scoreSizeCoastal(boat), factor: 'Size', weight: 0.25 };
+	const ccSAD = { ...scoreSAD(boat), factor: 'SA/D Ratio', weight: 0.2 };
+	const ccMCR = { ...scoreMotionComfort(boat), factor: 'Motion Comfort', weight: 0.15 };
+	const ccCapsize = { ...scoreCapsize(boat), factor: 'Stability', weight: 0.1 };
+	const coastalItems = [ccEase, ccSize, ccSAD, ccMCR, ccCapsize];
 	const score_coastal_cruising = weighted(coastalItems);
 
 	// Upwind

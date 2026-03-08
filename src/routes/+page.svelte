@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { boats } from '$lib/seed-data';
 	import { computeScores } from '$lib/scoring';
-	import type { Boat, BoatScores, ScoreDimension } from '$lib/types';
+	import type { Boat, BoatScores } from '$lib/types';
 	import type { BoatTraderListing } from '$lib/boattrader';
 	import UseCaseForm from '$lib/components/UseCaseForm.svelte';
 	import ListingLookup from '$lib/components/ListingLookup.svelte';
@@ -26,38 +26,7 @@
 
 	const user = $derived(getUser());
 
-	// Map use case to score dimension weights
-	const useCaseWeights: Record<string, Partial<Record<keyof BoatScores, number>>> = {
-		bluewater: { score_bluewater: 0.7, score_singlehand: 0.15, score_liveaboard: 0.15 },
-		pacific: { score_pacific_ready: 0.5, score_bluewater: 0.25, score_liveaboard: 0.25 },
-		coastal: { score_coastal_cruising: 0.6, score_liveaboard: 0.2, score_upwind: 0.2 },
-		liveaboard: { score_liveaboard: 0.6, score_coastal_cruising: 0.2, score_bluewater: 0.2 },
-		singlehand: { score_singlehand: 0.7, score_bluewater: 0.15, score_coastal_cruising: 0.15 },
-		circumnavigation: { score_bluewater: 0.4, score_pacific_ready: 0.3, score_singlehand: 0.3 }
-	};
-
-	// Experience adjusts how much singlehand/ease-of-handling matters
-	const experienceBoost: Record<string, Partial<Record<keyof BoatScores, number>>> = {
-		beginner: { score_singlehand: 0.2, score_coastal_cruising: 0.1 },
-		intermediate: { score_singlehand: 0.1 },
-		experienced: {},
-		professional: { score_bluewater: 0.1 }
-	};
-
-	// Waters boost — shallow/protected waters favor coastal, open ocean favors bluewater
-	const watersBoost: Record<string, Partial<Record<keyof BoatScores, number>>> = {
-		'Pacific Ocean': { score_bluewater: 0.15, score_downwind: 0.1 },
-		'Atlantic Ocean': { score_bluewater: 0.15, score_upwind: 0.1 },
-		Caribbean: { score_coastal_cruising: 0.2, score_liveaboard: 0.1 },
-		Mediterranean: { score_coastal_cruising: 0.15, score_upwind: 0.1 },
-		'Pacific Northwest': { score_coastal_cruising: 0.1, score_upwind: 0.1 },
-		'New England Coast': { score_coastal_cruising: 0.1, score_upwind: 0.1 },
-		'Gulf Coast': { score_coastal_cruising: 0.15, score_liveaboard: 0.1 },
-		'Great Lakes': { score_coastal_cruising: 0.2 },
-		'Around the World': { score_bluewater: 0.15, score_singlehand: 0.1 }
-	};
-
-	// Primary score key for display
+	// Primary score key per use case
 	const useCaseToScore: Record<string, keyof BoatScores> = {
 		bluewater: 'score_bluewater',
 		pacific: 'score_pacific_ready',
@@ -67,32 +36,62 @@
 		circumnavigation: 'score_pacific_ready'
 	};
 
-	function compositeScore(scores: BoatScores): number {
-		const baseWeights = useCaseWeights[useCase] ?? { score_bluewater: 1 };
-		const expBoost = experienceBoost[experience] ?? {};
-		const watBoost = watersBoost[waters] ?? {};
+	function compositeScore(boat: Boat, scores: BoatScores): number {
+		const key = useCaseToScore[useCase] ?? 'score_bluewater';
+		let base = scores[key] as number;
 
-		// Merge weights, then normalize
-		const merged: Record<string, number> = {};
-		for (const [k, w] of Object.entries(baseWeights)) merged[k] = (merged[k] ?? 0) + w;
-		for (const [k, w] of Object.entries(expBoost)) merged[k] = (merged[k] ?? 0) + w;
-		for (const [k, w] of Object.entries(watBoost)) merged[k] = (merged[k] ?? 0) + w;
+		// Experience-based adjustments using boat properties directly
+		const loa = boat.length_ft ?? 40;
+		const disp = boat.displacement_lbs ?? 20000;
+		const rig = boat.rig_type ?? 'sloop';
 
-		const totalWeight = Object.values(merged).reduce((s, w) => s + w, 0);
-		let total = 0;
-		for (const [k, w] of Object.entries(merged)) {
-			total += (scores[k as keyof BoatScores] as number) * (w / totalWeight);
+		if (experience === 'beginner') {
+			// Beginners: penalize large, heavy, complex boats
+			if (loa > 45) base -= (loa - 45) * 3;
+			else if (loa > 42) base -= (loa - 42) * 1.5;
+			if (loa <= 40) base += 5;
+
+			if (disp > 25000) base -= 10;
+			else if (disp < 18000) base += 5;
+
+			if (rig === 'ketch' || rig === 'schooner') base -= 10;
+			if (rig === 'sloop') base += 5;
+
+			if (boat.mast_step === 'keel_stepped') base -= 5;
+		} else if (experience === 'intermediate') {
+			if (loa > 50) base -= (loa - 50) * 2;
+			if (loa <= 42) base += 3;
+		} else if (experience === 'professional') {
+			// Professionals can handle anything, slight bonus for capability
+			base += (scores.score_bluewater as number) * 0.1;
 		}
-		return Math.round(total);
+
+		// Waters-based adjustments
+		const protectedWaters = ['Caribbean', 'Mediterranean', 'Gulf Coast', 'Great Lakes'];
+		const openOcean = ['Pacific Ocean', 'Atlantic Ocean', 'Around the World'];
+
+		if (protectedWaters.includes(waters)) {
+			// Penalize overkill bluewater boats in protected waters
+			if (scores.score_bluewater > 85 && useCase === 'coastal') base -= 10;
+			// Bonus for comfortable, easy boats
+			base += (scores.score_coastal_cruising as number) * 0.15;
+		}
+
+		if (openOcean.includes(waters)) {
+			// Bonus for seaworthiness in open ocean
+			base += (scores.score_bluewater as number) * 0.1;
+			if (scores.score_bluewater < 50) base -= 10;
+		}
+
+		return Math.round(Math.max(0, Math.min(100, base)));
 	}
 
 	const rankedDesigns = $derived(() => {
-		// Touch reactive vars so Svelte tracks them
 		const _uc = useCase;
 		const _exp = experience;
 		const _wat = waters;
 		return scoredBoats
-			.map((sb) => ({ ...sb, composite: compositeScore(sb.scores) }))
+			.map((sb) => ({ ...sb, composite: compositeScore(sb.boat, sb.scores) }))
 			.toSorted((a, b) => b.composite - a.composite);
 	});
 
