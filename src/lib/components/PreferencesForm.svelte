@@ -17,15 +17,15 @@
 	const user = $derived(getUser());
 	let saving = $state(false);
 	let saved = $state(false);
-	let loading = $state(false);
+	let loaded = false; // not reactive — prevents re-triggering
 
 	// Local copy for editing
 	let prefs = $state<UserPreferences>({ ...defaultPreferences, ...preferences });
 
-	// Load preferences from DB when user becomes available
+	// Load preferences from DB once when user becomes available
 	$effect(() => {
-		if (user && !loading) {
-			loading = true;
+		if (user && !loaded) {
+			loaded = true;
 			loadPreferences();
 		}
 	});
@@ -42,7 +42,6 @@
 			prefs = { ...defaultPreferences, ...data };
 			onchange(prefs);
 		}
-		loading = false;
 	}
 
 	async function savePreferences() {
@@ -128,8 +127,8 @@
 						<input
 							type="checkbox"
 							class="peer sr-only"
-							checked={prefs.no_teak_decks}
-							onchange={() => { prefs.no_teak_decks = !prefs.no_teak_decks; update(); }}
+							bind:checked={prefs.no_teak_decks}
+							onchange={() => { update(); }}
 						/>
 						<div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
 					</label>
@@ -145,8 +144,8 @@
 						<input
 							type="checkbox"
 							class="peer sr-only"
-							checked={prefs.no_canoe_stern}
-							onchange={() => { prefs.no_canoe_stern = !prefs.no_canoe_stern; update(); }}
+							bind:checked={prefs.no_canoe_stern}
+							onchange={() => { update(); }}
 						/>
 						<div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
 					</label>
@@ -232,8 +231,8 @@
 						<input
 							type="checkbox"
 							class="peer sr-only"
-							checked={prefs.prefer_keel_stepped}
-							onchange={() => { prefs.prefer_keel_stepped = !prefs.prefer_keel_stepped; update(); }}
+							bind:checked={prefs.prefer_keel_stepped}
+							onchange={() => { update(); }}
 						/>
 						<div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
 					</label>
