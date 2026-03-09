@@ -17,6 +17,7 @@
 	const user = $derived(getUser());
 	let saving = $state(false);
 	let saved = $state(false);
+	let saveError = $state('');
 	let loaded = false; // not reactive — prevents re-triggering
 
 	// Local copy for editing
@@ -48,8 +49,9 @@
 		if (!user) return;
 		saving = true;
 		saved = false;
+		saveError = '';
 
-		const payload = {
+		const payload: Record<string, unknown> = {
 			user_id: user.id,
 			cockpit_type: prefs.cockpit_type || null,
 			no_teak_decks: prefs.no_teak_decks,
@@ -63,13 +65,24 @@
 			updated_at: new Date().toISOString()
 		};
 
-		const { error } = await supabase
+		let { error } = await supabase
 			.from('user_preferences')
 			.upsert(payload, { onConflict: 'user_id' });
+
+		// Retry without no_canoe_stern if column doesn't exist yet
+		if (error?.message?.includes('no_canoe_stern')) {
+			delete payload.no_canoe_stern;
+			({ error } = await supabase
+				.from('user_preferences')
+				.upsert(payload, { onConflict: 'user_id' }));
+		}
 
 		if (!error) {
 			saved = true;
 			setTimeout(() => (saved = false), 2000);
+		} else {
+			saveError = error.message;
+			setTimeout(() => (saveError = ''), 5000);
 		}
 		saving = false;
 	}
@@ -251,6 +264,9 @@
 					>
 						{saving ? 'Saving...' : saved ? 'Saved!' : 'Save Preferences'}
 					</button>
+					{#if saveError}
+						<p class="mt-1 text-xs text-red-500">{saveError}</p>
+					{/if}
 				{:else}
 					<span class="text-xs text-gray-400">Sign in to save preferences across sessions</span>
 				{/if}
