@@ -99,7 +99,7 @@
 			if (loa <= 40) base += 5;
 			if (disp > 25000) base -= 10;
 			else if (disp < 18000) base += 5;
-			if (rig === 'ketch' || rig === 'schooner') base -= 10;
+			if (rig === 'ketch' || rig === 'cutter_ketch' || rig === 'schooner') base -= 10;
 			if (rig === 'sloop') base += 5;
 		} else if (experience === 'intermediate') {
 			if (loa > 50) base -= (loa - 50) * 2;

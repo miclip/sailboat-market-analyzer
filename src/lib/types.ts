@@ -1,7 +1,7 @@
 export type RudderType = 'skeg_hung' | 'spade' | 'full_keel_integrated' | 'transom_hung';
 export type KeelType = 'full' | 'fin' | 'modified_fin' | 'bulb_fin' | 'wing' | 'centerboard';
 export type MastStep = 'keel_stepped' | 'deck_stepped';
-export type RigType = 'sloop' | 'cutter' | 'ketch' | 'yawl' | 'schooner';
+export type RigType = 'sloop' | 'cutter' | 'ketch' | 'cutter_ketch' | 'yawl' | 'schooner';
 export type CockpitType = 'center' | 'aft';
 export type HullType = 'full_keel' | 'fin_keel' | 'modified_full' | 'twin_keel';
 export type ForefootDepth = 'deep' | 'moderate' | 'cut_away';

@@ -59,7 +59,8 @@ function scoreDLRatio(boat: Boat, invertForUpwind = false): { points: number; va
 	// For upwind: lighter is better (<200 ideal)
 	let points: number;
 	if (invertForUpwind) {
-		points = clamp(lerp(dlr, 350, 150, 0, 100), 0, 100);
+		// Heavy boats still sail upwind, just slower — floor at 15
+		points = clamp(lerp(dlr, 400, 150, 15, 100), 15, 100);
 	} else {
 		points = clamp(lerp(dlr, 100, 300, 0, 100), 0, 100);
 	}
@@ -100,7 +101,8 @@ function scoreCockpit(boat: Boat): { points: number; value: string } {
 
 function scoreRigSinglehand(boat: Boat): { points: number; value: string } {
 	const map: Record<string, number> = {
-		ketch: 100,
+		cutter_ketch: 100,
+		ketch: 95,
 		cutter: 90,
 		yawl: 85,
 		sloop: 60,
@@ -293,6 +295,7 @@ function scoreEaseOfHandling(boat: Boat): { points: number; value: string } {
 	if (boat.rig_type === 'sloop') { points += 15; factors.push('simple rig'); }
 	else if (boat.rig_type === 'cutter') { points += 5; }
 	else if (boat.rig_type === 'ketch') { points -= 5; factors.push('complex rig'); }
+	else if (boat.rig_type === 'cutter_ketch') { points -= 10; factors.push('complex rig'); }
 
 	// Deck-stepped masts are easier to service
 	if (boat.mast_step === 'deck_stepped') { points += 10; factors.push('deck stepped'); }

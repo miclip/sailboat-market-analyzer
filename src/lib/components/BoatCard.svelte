@@ -20,7 +20,7 @@
 		'SA/D': 'Sail Area to Displacement ratio. Higher means more sail power relative to weight. 16+ is well-powered.',
 		Rudder: 'Skeg-hung rudders are protected and strong. Spade rudders are responsive but exposed. Full keel integrated is the most protected.',
 		Keel: 'Full keels track well but are heavy. Modified fin is the modern bluewater standard. Fin keels are fast but less stable.',
-		Rig: 'Sloop is simplest. Cutter adds an inner forestay for heavy weather. Ketch has two masts for flexible sail plans.',
+		Rig: 'Sloop is simplest. Cutter adds an inner forestay for heavy weather. Ketch has two masts for flexible sail plans. Cutter ketch combines both.',
 		Mast: 'Keel-stepped goes through the deck to the hull — stronger. Deck-stepped sits on the deck — lighter, easier to service.',
 		Cockpit: 'Center cockpits have a protected helm and larger aft cabin. Aft cockpits offer better sail handling access.',
 		Hull: 'The shape of the underwater hull. Full keel is traditional and protective. Fin keel is modern and fast.'
