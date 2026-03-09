@@ -22,12 +22,34 @@
 	const qsUc = page.url.searchParams.get('uc') ?? '';
 	const qsExp = page.url.searchParams.get('exp') ?? '';
 	const qsWaters = page.url.searchParams.get('waters') ?? '';
+	const qsPrefs = page.url.searchParams.get('prefs');
 
 	let step = $state(qsStep >= 1 && qsStep <= 4 ? qsStep : 1);
 	let useCase = $state(qsUc || '');
 	let experience = $state(qsExp || '');
 	let waters = $state(qsWaters || '');
-	let preferences = $state<UserPreferences>({ ...defaultPreferences });
+	let preferences = $state<UserPreferences>(
+		qsPrefs ? { ...defaultPreferences, ...JSON.parse(qsPrefs) } : { ...defaultPreferences }
+	);
+
+	// Build query string for preserving state across navigation
+	function stateParams(): string {
+		const p = new URLSearchParams();
+		p.set('uc', useCase);
+		p.set('exp', experience);
+		p.set('waters', waters);
+		// Only serialize non-default preferences
+		const diff: Record<string, unknown> = {};
+		for (const [k, v] of Object.entries(preferences)) {
+			if (v !== (defaultPreferences as unknown as Record<string, unknown>)[k] && v != null) {
+				diff[k] = v;
+			}
+		}
+		if (Object.keys(diff).length > 0) {
+			p.set('prefs', JSON.stringify(diff));
+		}
+		return p.toString();
+	}
 
 	const user = $derived(getUser());
 
@@ -320,7 +342,7 @@
 				{#each rankedDesigns() as { boat, scores, composite }, i}
 					{@const score = composite}
 					<a
-						href="/boats/{boat.id}?uc={useCase}&exp={experience}&waters={encodeURIComponent(waters)}"
+						href="/boats/{boat.id}?{stateParams()}"
 						class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm hover:border-blue-300 hover:shadow transition-all"
 					>
 						<div class="flex items-start justify-between">

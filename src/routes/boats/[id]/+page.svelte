@@ -48,6 +48,16 @@
 	const qsUc = page.url.searchParams.get('uc') ?? '';
 	const qsExp = page.url.searchParams.get('exp') ?? '';
 	const qsWaters = page.url.searchParams.get('waters') ?? '';
+	const qsPrefs = page.url.searchParams.get('prefs') ?? '';
+
+	// Build back link preserving all state
+	const backParams = new URLSearchParams();
+	backParams.set('step', '3');
+	if (qsUc) backParams.set('uc', qsUc);
+	if (qsExp) backParams.set('exp', qsExp);
+	if (qsWaters) backParams.set('waters', qsWaters);
+	if (qsPrefs) backParams.set('prefs', qsPrefs);
+	const backHref = `/?${backParams.toString()}`;
 
 	let showPrompt = $state(false);
 	let useCase = $state(useCaseLabels[qsUc] ?? 'bluewater passage-making');
@@ -111,7 +121,7 @@
 {#if boat && scores}
 	<div class="space-y-8">
 		<div>
-			<a href="/?step=3&uc={qsUc}&exp={qsExp}&waters={encodeURIComponent(qsWaters)}" class="mb-4 inline-block text-sm text-blue-600 hover:text-blue-800">
+			<a href={backHref} class="mb-4 inline-block text-sm text-blue-600 hover:text-blue-800">
 				&larr; Back to Rankings
 			</a>
 			<h1 class="text-2xl font-bold text-gray-900">{boat.design_name}</h1>
