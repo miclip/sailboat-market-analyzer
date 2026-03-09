@@ -5,6 +5,7 @@ export type RigType = 'sloop' | 'cutter' | 'ketch' | 'yawl' | 'schooner';
 export type CockpitType = 'center' | 'aft';
 export type HullType = 'full_keel' | 'fin_keel' | 'modified_full' | 'twin_keel';
 export type ForefootDepth = 'deep' | 'moderate' | 'cut_away';
+export type GalleyLayout = 'u_shaped' | 'l_shaped' | 'corridor' | 'open_linear';
 
 export type ConditionTier = 'offshore_ready' | 'good' | 'fair' | 'project';
 export type SailsCondition = 'new' | 'good' | 'fair' | 'worn';
@@ -41,6 +42,7 @@ export interface Boat {
 	rig_type?: RigType;
 	cockpit_type?: CockpitType;
 	hull_type?: HullType;
+	galley_layout?: GalleyLayout;
 
 	underbody_pct?: number;
 	forefoot_depth?: ForefootDepth;

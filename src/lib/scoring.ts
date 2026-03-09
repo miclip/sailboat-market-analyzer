@@ -16,8 +16,8 @@ function scoreRudder(boat: Boat): { points: number; value: string } {
 
 function scoreKeelBluewater(boat: Boat): { points: number; value: string } {
 	const map: Record<string, number> = {
-		full: 100,
-		modified_fin: 85,
+		full: 90,
+		modified_fin: 95,
 		fin: 50,
 		bulb_fin: 45,
 		wing: 40,
@@ -175,12 +175,14 @@ function scoreDisplacementDownwind(boat: Boat): { points: number; value: string 
 }
 
 function scoreKeelDownwind(boat: Boat): { points: number; value: string } {
+	// Modified fin is best downwind — directional stability without the rolling
+	// Full keel tends to develop rhythmic rolling in following seas
 	const map: Record<string, number> = {
-		full: 100,
-		modified_fin: 80,
-		fin: 50,
+		modified_fin: 95,
+		full: 65,
+		fin: 60,
 		bulb_fin: 55,
-		wing: 45,
+		wing: 50,
 		centerboard: 40
 	};
 	return {
@@ -215,6 +217,34 @@ function scoreBeamLiveaboard(boat: Boat): { points: number; value: string } {
 	// Wider = more room
 	const points = clamp(lerp(beam, 10, 15, 0, 100), 0, 100);
 	return { points: Math.round(points), value: `${beam}ft` };
+}
+
+function scoreGalleyLiveaboard(boat: Boat): { points: number; value: string } {
+	// Open layouts are better for liveaboard — spacious, modern feel
+	const map: Record<string, number> = {
+		open_linear: 100,
+		corridor: 70,
+		l_shaped: 55,
+		u_shaped: 40
+	};
+	return {
+		points: map[boat.galley_layout ?? ''] ?? 50,
+		value: boat.galley_layout ?? 'unknown'
+	};
+}
+
+function scoreGalleyOffshore(boat: Boat): { points: number; value: string } {
+	// Enclosed galleys are safer at sea — you can brace yourself
+	const map: Record<string, number> = {
+		u_shaped: 100,
+		l_shaped: 80,
+		corridor: 50,
+		open_linear: 25
+	};
+	return {
+		points: map[boat.galley_layout ?? ''] ?? 50,
+		value: boat.galley_layout ?? 'unknown'
+	};
 }
 
 function scoreEaseOfHandling(boat: Boat): { points: number; value: string } {
@@ -277,13 +307,14 @@ function breakdown(
 export function computeScores(boat: Boat): BoatScores {
 	// Bluewater
 	const bwRudder = { ...scoreRudder(boat), factor: 'Rudder Type', weight: 0.2 };
-	const bwKeel = { ...scoreKeelBluewater(boat), factor: 'Keel Type', weight: 0.2 };
+	const bwKeel = { ...scoreKeelBluewater(boat), factor: 'Keel Type', weight: 0.15 };
 	const bwMast = { ...scoreMastStep(boat), factor: 'Mast Step', weight: 0.15 };
 	const bwBackstay = { ...scoreBackstay(boat), factor: 'Backstay', weight: 0.1 };
-	const bwCapsize = { ...scoreCapsize(boat), factor: 'Capsize Screening', weight: 0.15 };
+	const bwGalley = { ...scoreGalleyOffshore(boat), factor: 'Galley Safety', weight: 0.1 };
+	const bwCapsize = { ...scoreCapsize(boat), factor: 'Capsize Screening', weight: 0.1 };
 	const bwDLR = { ...scoreDLRatio(boat), factor: 'D/L Ratio', weight: 0.1 };
 	const bwMCR = { ...scoreMotionComfort(boat), factor: 'Motion Comfort', weight: 0.1 };
-	const bluewaterItems = [bwRudder, bwKeel, bwMast, bwBackstay, bwCapsize, bwDLR, bwMCR];
+	const bluewaterItems = [bwRudder, bwKeel, bwMast, bwBackstay, bwGalley, bwCapsize, bwDLR, bwMCR];
 	const score_bluewater = weighted(bluewaterItems);
 
 	// Singlehand
@@ -301,17 +332,13 @@ export function computeScores(boat: Boat): BoatScores {
 	const singlehandItems = [shCockpit, shRig, shMast, shSteering, shLOA, shSAD];
 	const score_singlehand = weighted(singlehandItems);
 
-	// Liveaboard
-	const laSize = { ...scoreLiveaboard(boat), factor: 'LOA', weight: 0.35 };
-	const laBeam = { ...scoreBeamLiveaboard(boat), factor: 'Beam', weight: 0.3 };
-	const laMCR = { ...scoreMotionComfort(boat), factor: 'Motion Comfort', weight: 0.2 };
-	const laGen = {
-		factor: 'Generator',
-		weight: 0.15,
-		points: boat.generator_standard ? 100 : 30,
-		value: boat.generator_standard ? 'yes' : 'no'
-	};
-	const liveaboardItems = [laSize, laBeam, laMCR, laGen];
+	// Liveaboard (at the dock — space, openness, comfort)
+	const laSize = { ...scoreLiveaboard(boat), factor: 'LOA', weight: 0.3 };
+	const laBeam = { ...scoreBeamLiveaboard(boat), factor: 'Beam', weight: 0.25 };
+	const laGalley = { ...scoreGalleyLiveaboard(boat), factor: 'Galley Layout', weight: 0.2 };
+	const laCockpit = { ...scoreCockpit(boat), factor: 'Cockpit Type', weight: 0.15 };
+	const laMCR = { ...scoreMotionComfort(boat), factor: 'Motion Comfort', weight: 0.1 };
+	const liveaboardItems = [laSize, laBeam, laGalley, laCockpit, laMCR];
 	const score_liveaboard = weighted(liveaboardItems);
 
 	// Pacific Ready = Bluewater(60%) + Singlehand(20%) + Liveaboard(20%)
