@@ -61,8 +61,17 @@ function scoreDLRatio(boat: Boat, invertForUpwind = false): { points: number; va
 function scoreMotionComfort(boat: Boat): { points: number; value: string } {
 	const mcr = boat.motion_comfort_ratio;
 	if (mcr == null) return { points: 50, value: 'unknown' };
-	// > 30 is ideal, < 20 is poor
+	// Bluewater: > 30 is ideal, < 20 is poor
 	const points = clamp(lerp(mcr, 15, 40, 0, 100), 0, 100);
+	return { points: Math.round(points), value: mcr.toFixed(1) };
+}
+
+function scoreMotionComfortCoastal(boat: Boat): { points: number; value: string } {
+	const mcr = boat.motion_comfort_ratio;
+	if (mcr == null) return { points: 50, value: 'unknown' };
+	// Coastal: 20-30 is fine, >30 is great but diminishing returns
+	// Anything above 20 is acceptable for short passages
+	const points = clamp(lerp(mcr, 15, 28, 0, 100), 0, 100);
 	return { points: Math.round(points), value: mcr.toFixed(1) };
 }
 
@@ -305,7 +314,7 @@ export function computeScores(boat: Boat): BoatScores {
 	const ccEase = { ...scoreEaseOfHandling(boat), factor: 'Ease of Handling', weight: 0.3 };
 	const ccSize = { ...scoreSizeCoastal(boat), factor: 'Size', weight: 0.25 };
 	const ccSAD = { ...scoreSAD(boat), factor: 'SA/D Ratio', weight: 0.2 };
-	const ccMCR = { ...scoreMotionComfort(boat), factor: 'Motion Comfort', weight: 0.15 };
+	const ccMCR = { ...scoreMotionComfortCoastal(boat), factor: 'Motion Comfort', weight: 0.15 };
 	const ccCapsize = { ...scoreCapsize(boat), factor: 'Stability', weight: 0.1 };
 	const coastalItems = [ccEase, ccSize, ccSAD, ccMCR, ccCapsize];
 	const score_coastal_cruising = weighted(coastalItems);
