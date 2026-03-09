@@ -8,7 +8,19 @@
 	let copied = $state(false);
 
 	async function copyToClipboard() {
-		await navigator.clipboard.writeText(prompt);
+		try {
+			await navigator.clipboard.writeText(prompt);
+		} catch {
+			// Fallback for non-HTTPS contexts
+			const textarea = document.createElement('textarea');
+			textarea.value = prompt;
+			textarea.style.position = 'fixed';
+			textarea.style.opacity = '0';
+			document.body.appendChild(textarea);
+			textarea.select();
+			document.execCommand('copy');
+			document.body.removeChild(textarea);
+		}
 		copied = true;
 		setTimeout(() => (copied = false), 2000);
 	}

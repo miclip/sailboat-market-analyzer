@@ -10,7 +10,7 @@
 	import SessionBar from '$lib/components/SessionBar.svelte';
 	import { getUser } from '$lib/auth.svelte';
 	import { getActiveSessionId, setActiveSessionId as setSessionId, saveSessionDebounced } from '$lib/session.svelte';
-	import { formatLabel, formatCurrency } from '$lib/utils';
+	import { formatLabel, formatCurrency, formatNumber } from '$lib/utils';
 
 	interface ScoredBoat {
 		boat: Boat;
@@ -242,7 +242,7 @@
 
 	function buildAnalysisPrompt(): string {
 		const lines: string[] = [
-			`You are helping a sailor evaluate boats for purchase.`,
+			`You are helping a sailor evaluate boats for purchase. Where listing URLs are provided, browse them to extract engine hours, rigging condition, refit history, sail inventory, and any details not listed below.`,
 			'',
 			'## Buyer Profile',
 			`Use Case: ${useCaseLabels[useCase] ?? useCase}`,
@@ -261,9 +261,29 @@
 				const scores = design ? computeScores(design) : null;
 
 				lines.push(`### ${item.year ?? ''} ${item.make} ${item.model}`);
+				if (item.listing_url) {
+					lines.push(`- Listing URL: ${item.listing_url}`);
+				}
 				lines.push(`- Asking Price: ${item.last_asking_price ? formatCurrency(item.last_asking_price) : 'Unknown'}`);
 				lines.push(`- Location: ${[item.last_location_city, item.last_location_state].filter(Boolean).join(', ') || 'Unknown'}`);
 				lines.push(`- Status: ${formatLabel(item.status)}`);
+
+				if (design) {
+					lines.push(`- LOA: ${design.length_ft ?? '?'}ft | Beam: ${design.beam_ft ?? '?'}ft | LWL: ${design.lwl_ft ?? '?'}ft`);
+					lines.push(`- Displacement: ${design.displacement_lbs ? formatNumber(design.displacement_lbs) + 'lbs' : '?'} | Ballast: ${design.ballast_lbs ? formatNumber(design.ballast_lbs) + 'lbs' : '?'} (${design.ballast_ratio ? (design.ballast_ratio * 100).toFixed(0) + '%' : '?'})`);
+					lines.push(`- D/L: ${design.displacement_length_ratio?.toFixed(0) ?? '?'} | SA/D: ${design.sa_displacement_ratio?.toFixed(1) ?? '?'} | Sail Area: ${design.sail_area_sqft ? formatNumber(design.sail_area_sqft) + 'sqft' : '?'}`);
+					lines.push(`- Capsize Screening: ${design.capsize_screening_value?.toFixed(2) ?? '?'} | Motion Comfort: ${design.motion_comfort_ratio?.toFixed(1) ?? '?'}`);
+					lines.push(`- Rig: ${design.rig_type ? formatLabel(design.rig_type) : '?'} | Keel: ${design.keel_type ? formatLabel(design.keel_type) : '?'} | Rudder: ${design.rudder_type ? formatLabel(design.rudder_type) : '?'}`);
+					lines.push(`- Cockpit: ${design.cockpit_type ? formatLabel(design.cockpit_type) : '?'} | Hull: ${design.hull_type ? formatLabel(design.hull_type) : '?'} | Stern: ${design.stern_type ? formatLabel(design.stern_type) : '?'}`);
+					lines.push(`- Mast: ${design.mast_step ? formatLabel(design.mast_step) : '?'} | Backstay: ${design.has_backstay == null ? '?' : design.has_backstay ? 'Yes' : 'No'} | Teak Decks: ${design.has_teak_decks == null ? '?' : design.has_teak_decks ? 'Yes' : 'No'}`);
+					if (design.cabins || design.berths || design.sea_berths) {
+						lines.push(`- Cabins: ${design.cabins ?? '?'} | Berths: ${design.berths ?? '?'} | Sea Berths: ${design.sea_berths ?? '?'}`);
+					}
+					if (design.notes) {
+						lines.push(`- Notes: ${design.notes}`);
+					}
+				}
+
 				if (scores) {
 					const key = useCaseToScore[useCase] ?? 'score_bluewater';
 					lines.push(`- ${formatLabel(useCase)} Score: ${scores[key]}/100`);
@@ -280,7 +300,8 @@
 			`3. Flag any concerns for ${waters}`,
 			'4. Evaluate the asking prices — are they reasonable?',
 			'5. Rank them from best to worst fit and explain why',
-			'6. Suggest what to look for in a pre-purchase survey for each'
+			'6. Suggest what to look for in a pre-purchase survey for each',
+			'7. For each listing URL, extract and summarize: engine hours, rigging age/condition, recent refits, sail inventory, and any red flags from the description or photos'
 		);
 
 		return lines.join('\n');
@@ -447,11 +468,22 @@
 	<!-- Step 4: Your Listings + Prompt -->
 	{#if step === 4}
 		<section class="space-y-8">
-			<div>
-				<h1 class="mb-2 text-2xl font-bold text-gray-900">Your Tracked Listings</h1>
-				<p class="text-sm text-gray-500">
-					Review the listings you're tracking and generate a Claude analysis prompt.
-				</p>
+			<div class="flex items-start justify-between">
+				<div>
+					<h1 class="mb-2 text-2xl font-bold text-gray-900">Your Tracked Listings</h1>
+					<p class="text-sm text-gray-500">
+						Review the listings you're tracking and generate a Claude analysis prompt.
+					</p>
+				</div>
+				{#if user && watchlistItems.length > 0}
+					<button
+						onclick={() => { watchlistLoaded = false; loadWatchlist(); }}
+						disabled={watchlistLoading}
+						class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+					>
+						{watchlistLoading ? 'Refreshing...' : 'Refresh'}
+					</button>
+				{/if}
 			</div>
 
 			{#if !user}
