@@ -287,6 +287,36 @@
 		preferences = prefs;
 	}
 
+	function matchDesign(make: string, model: string): Boat | undefined {
+		const makeLower = make.toLowerCase();
+		const modelLower = model.toLowerCase();
+		// Filter to same manufacturer
+		const sameMake = boats.filter((b) => b.manufacturer.toLowerCase() === makeLower);
+		if (sameMake.length === 0) return undefined;
+
+		// Try exact match: design_name equals "Make Model"
+		const fullName = `${makeLower} ${modelLower}`;
+		const exact = sameMake.find((b) => b.design_name.toLowerCase() === fullName);
+		if (exact) return exact;
+
+		// Try: design_name contains the model, pick the best (shortest name that matches)
+		const candidates = sameMake
+			.filter((b) => b.design_name.toLowerCase().includes(modelLower))
+			.sort((a, b) => a.design_name.length - b.design_name.length);
+		if (candidates.length > 0) return candidates[0];
+
+		// Try: model contains the design_name's model part
+		const reverse = sameMake
+			.filter((b) => {
+				const designModel = b.design_name.toLowerCase().replace(makeLower, '').trim();
+				return designModel && modelLower.includes(designModel);
+			})
+			.sort((a, b) => b.design_name.length - a.design_name.length);
+		if (reverse.length > 0) return reverse[0];
+
+		return undefined;
+	}
+
 	function buildAnalysisPrompt(): string {
 		const lines: string[] = [
 			`You are helping a sailor evaluate boats for purchase. Where listing URLs are provided, browse them to extract engine hours, rigging condition, refit history, sail inventory, and any details not listed below.`,
@@ -301,10 +331,7 @@
 		if (watchlistItems.length > 0) {
 			lines.push('## Boats Under Consideration', '');
 			for (const item of watchlistItems) {
-				const design = boats.find(
-					(b) => b.manufacturer.toLowerCase() === item.make.toLowerCase()
-						&& b.design_name.toLowerCase().includes(item.model.toLowerCase())
-				);
+				const design = matchDesign(item.make, item.model);
 				const scores = design ? computeScores(design) : null;
 
 				lines.push(`### ${item.year ?? ''} ${item.make} ${item.model}`);

@@ -42,7 +42,10 @@
 		<div class="flex gap-2">
 			<button
 				onclick={copyToClipboard}
-				class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+				class="rounded-lg px-4 py-2 text-sm font-medium transition-all active:scale-95
+					{copied
+					? 'bg-green-600 text-white'
+					: 'bg-blue-600 text-white hover:bg-blue-700'}"
 			>
 				{copied ? 'Copied!' : 'Copy'}
 			</button>
