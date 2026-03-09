@@ -111,8 +111,8 @@
 {#if boat && scores}
 	<div class="space-y-8">
 		<div>
-			<a href="/boats" class="mb-4 inline-block text-sm text-blue-600 hover:text-blue-800">
-				&larr; All Designs
+			<a href="/?step=3&uc={qsUc}&exp={qsExp}&waters={encodeURIComponent(qsWaters)}" class="mb-4 inline-block text-sm text-blue-600 hover:text-blue-800">
+				&larr; Back to Rankings
 			</a>
 			<h1 class="text-2xl font-bold text-gray-900">{boat.design_name}</h1>
 			<p class="text-gray-500">

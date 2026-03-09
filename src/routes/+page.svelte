@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { boats } from '$lib/seed-data';
 	import { computeScores } from '$lib/scoring';
 	import { supabase } from '$lib/supabase';
@@ -16,10 +17,16 @@
 
 	const scoredBoats: ScoredBoat[] = boats.map((b) => ({ boat: b, scores: computeScores(b) }));
 
-	let step = $state(1);
-	let useCase = $state('');
-	let experience = $state('');
-	let waters = $state('');
+	// Restore state from URL params (e.g. when navigating back from boat detail)
+	const qsStep = Number(page.url.searchParams.get('step')) || 0;
+	const qsUc = page.url.searchParams.get('uc') ?? '';
+	const qsExp = page.url.searchParams.get('exp') ?? '';
+	const qsWaters = page.url.searchParams.get('waters') ?? '';
+
+	let step = $state(qsStep >= 1 && qsStep <= 4 ? qsStep : 1);
+	let useCase = $state(qsUc || '');
+	let experience = $state(qsExp || '');
+	let waters = $state(qsWaters || '');
 	let preferences = $state<UserPreferences>({ ...defaultPreferences });
 
 	const user = $derived(getUser());
