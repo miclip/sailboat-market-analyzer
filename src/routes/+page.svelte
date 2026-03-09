@@ -20,23 +20,55 @@
 	const scoredBoats: ScoredBoat[] = boats.map((b) => ({ boat: b, scores: computeScores(b) }));
 
 	// Restore state from URL params (e.g. when navigating back from boat detail)
-	const qsStep = Number(page.url.searchParams.get('step')) || 0;
-	const qsUc = page.url.searchParams.get('uc') ?? '';
-	const qsExp = page.url.searchParams.get('exp') ?? '';
-	const qsWaters = page.url.searchParams.get('waters') ?? '';
-	const qsPrefs = page.url.searchParams.get('prefs');
-	const qsSid = page.url.searchParams.get('sid');
+	function readUrlState() {
+		const params = page.url.searchParams;
+		return {
+			step: Number(params.get('step')) || 0,
+			uc: params.get('uc') ?? '',
+			exp: params.get('exp') ?? '',
+			waters: params.get('waters') ?? '',
+			prefs: params.get('prefs'),
+			sid: params.get('sid')
+		};
+	}
 
-	// Restore active session from URL
-	if (qsSid) setSessionId(qsSid);
+	const initial = readUrlState();
+	if (initial.sid) setSessionId(initial.sid);
 
-	let step = $state(qsStep >= 1 && qsStep <= 4 ? qsStep : 1);
-	let useCase = $state(qsUc || '');
-	let experience = $state(qsExp || '');
-	let waters = $state(qsWaters || '');
+	let step = $state(initial.step >= 1 && initial.step <= 4 ? initial.step : 1);
+	let useCase = $state(initial.uc || '');
+	let experience = $state(initial.exp || '');
+	let waters = $state(initial.waters || '');
 	let preferences = $state<UserPreferences>(
-		qsPrefs ? { ...defaultPreferences, ...JSON.parse(qsPrefs) } : { ...defaultPreferences }
+		initial.prefs ? { ...defaultPreferences, ...JSON.parse(initial.prefs) } : { ...defaultPreferences }
 	);
+
+	// Track URL for when user clicks Home (no params) — reset to step 1
+	let lastUrl = page.url.href;
+	$effect(() => {
+		const currentUrl = page.url.href;
+		if (currentUrl === lastUrl) return;
+		lastUrl = currentUrl;
+		const qs = readUrlState();
+		// If no step param, it's a fresh navigation (e.g. Home click) — reset
+		if (!qs.step && !qs.uc) {
+			step = 1;
+			useCase = '';
+			experience = '';
+			waters = '';
+			preferences = { ...defaultPreferences };
+			setSessionId(null);
+			watchlistLoaded = false;
+			showPrompt = false;
+		} else {
+			if (qs.step >= 1 && qs.step <= 4) step = qs.step;
+			if (qs.uc) useCase = qs.uc;
+			if (qs.exp) experience = qs.exp;
+			if (qs.waters) waters = qs.waters;
+			if (qs.prefs) preferences = { ...defaultPreferences, ...JSON.parse(qs.prefs) };
+			if (qs.sid) setSessionId(qs.sid);
+		}
+	});
 
 	// Build query string for preserving state across navigation
 	function stateParams(): string {
@@ -88,6 +120,10 @@
 		waters = state.waters;
 		preferences = state.preferences;
 		step = state.current_step >= 1 && state.current_step <= 4 ? state.current_step : 1;
+		// Reset watchlist so it reloads for the new session
+		watchlistLoaded = false;
+		watchlistItems = [];
+		showPrompt = false;
 	}
 
 	function scoreTextColor(score: number): string {
