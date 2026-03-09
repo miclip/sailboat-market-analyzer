@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { afterNavigate } from '$app/navigation';
 	import { boats } from '$lib/seed-data';
 	import { computeScores } from '$lib/scoring';
 	import { supabase } from '$lib/supabase';
@@ -43,15 +44,15 @@
 		initial.prefs ? { ...defaultPreferences, ...JSON.parse(initial.prefs) } : { ...defaultPreferences }
 	);
 
-	// Track URL for when user clicks Home (no params) — reset to step 1
-	let lastUrl = page.url.href;
-	$effect(() => {
-		const currentUrl = page.url.href;
-		if (currentUrl === lastUrl) return;
-		lastUrl = currentUrl;
-		const qs = readUrlState();
-		// If no step param, it's a fresh navigation (e.g. Home click) — reset
-		if (!qs.step && !qs.uc) {
+	// Handle client-side navigations (e.g. Home click, back from boat detail)
+	afterNavigate(({ to }) => {
+		if (!to?.url) return;
+		const params = to.url.searchParams;
+		const qsStep = Number(params.get('step')) || 0;
+		const qsUc = params.get('uc') ?? '';
+
+		if (!qsStep && !qsUc) {
+			// Fresh navigation with no params (e.g. Home click) — reset
 			step = 1;
 			useCase = '';
 			experience = '';
@@ -59,14 +60,20 @@
 			preferences = { ...defaultPreferences };
 			setSessionId(null);
 			watchlistLoaded = false;
+			watchlistItems = [];
 			showPrompt = false;
 		} else {
-			if (qs.step >= 1 && qs.step <= 4) step = qs.step;
-			if (qs.uc) useCase = qs.uc;
-			if (qs.exp) experience = qs.exp;
-			if (qs.waters) waters = qs.waters;
-			if (qs.prefs) preferences = { ...defaultPreferences, ...JSON.parse(qs.prefs) };
-			if (qs.sid) setSessionId(qs.sid);
+			// Restore state from params (e.g. back from boat detail)
+			if (qsStep >= 1 && qsStep <= 4) step = qsStep;
+			if (qsUc) useCase = qsUc;
+			const qsExp = params.get('exp') ?? '';
+			const qsWaters = params.get('waters') ?? '';
+			const qsPrefs = params.get('prefs');
+			const qsSid = params.get('sid');
+			if (qsExp) experience = qsExp;
+			if (qsWaters) waters = qsWaters;
+			if (qsPrefs) preferences = { ...defaultPreferences, ...JSON.parse(qsPrefs) };
+			if (qsSid) setSessionId(qsSid);
 		}
 	});
 
