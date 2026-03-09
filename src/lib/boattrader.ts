@@ -15,6 +15,17 @@ export interface BoatTraderListing {
 	cabins: number | null;
 	heads: number | null;
 	url: string;
+	// New fields
+	engineMake: string | null;
+	engineModel: string | null;
+	engineHp: number | null;
+	engineHours: number | null;
+	engineCount: number | null;
+	fuelType: string | null;
+	hullMaterial: string | null;
+	description: string | null;
+	listDate: string | null;
+	thumbnailUrl: string | null;
 }
 
 interface BTRecord {
@@ -23,6 +34,8 @@ interface BTRecord {
 	model: string;
 	year: number;
 	portalLink?: string;
+	dateCreated?: string;
+	description?: string;
 	price?: {
 		hidden: boolean;
 		type?: {
@@ -55,11 +68,28 @@ interface BTRecord {
 			heads?: number;
 		};
 	};
+	propulsion?: {
+		engines?: Array<{
+			make?: string;
+			model?: string;
+			hp?: number;
+			hours?: number;
+			fuelType?: string;
+		}>;
+	};
+	hullMaterial?: string;
+	fuelType?: string;
+	media?: {
+		images?: Array<{
+			url?: string;
+		}>;
+	};
 }
 
 export function parseRecord(r: BTRecord): BoatTraderListing {
 	const dims = r.specifications?.dimensions;
 	const lengthFt = dims?.lengths?.overall?.ft ?? dims?.lengths?.nominal?.ft ?? null;
+	const engine = r.propulsion?.engines?.[0];
 
 	return {
 		id: r.id,
@@ -77,7 +107,17 @@ export function parseRecord(r: BTRecord): BoatTraderListing {
 		draftFt: dims?.maxDraft?.ft ?? null,
 		cabins: r.specifications?.accommodation?.cabins ?? null,
 		heads: r.specifications?.accommodation?.heads ?? null,
-		url: r.portalLink ?? `https://www.boattrader.com/boat/${r.id}/`
+		url: r.portalLink ?? `https://www.boattrader.com/boat/${r.id}/`,
+		engineMake: engine?.make ?? null,
+		engineModel: engine?.model ?? null,
+		engineHp: engine?.hp ?? null,
+		engineHours: engine?.hours ?? null,
+		engineCount: r.propulsion?.engines?.length ?? null,
+		fuelType: engine?.fuelType ?? r.fuelType ?? null,
+		hullMaterial: r.hullMaterial ?? null,
+		description: r.description ?? null,
+		listDate: r.dateCreated ?? null,
+		thumbnailUrl: r.media?.images?.[0]?.url ?? null
 	};
 }
 

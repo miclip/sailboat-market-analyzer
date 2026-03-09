@@ -18,7 +18,7 @@ export const GET: RequestHandler = async ({ url }) => {
 		page,
 		pageSize,
 		sort: 'modified-desc',
-		fields: 'id,make,model,year,price,location,specifications,portalLink'
+		fields: 'id,make,model,year,price,location,specifications,portalLink,propulsion,hullMaterial,fuelType,description,media,dateCreated'
 	});
 
 	if (id) {

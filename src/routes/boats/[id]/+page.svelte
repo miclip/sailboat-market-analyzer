@@ -6,8 +6,9 @@
 	import { buildPrompt } from '$lib/prompt-builder';
 	import { supabase } from '$lib/supabase';
 	import { scoreComps } from '$lib/comp-finder';
-	import type { Boat, BoatScores, Listing, Comp, ScoreDimension } from '$lib/types';
+	import type { Boat, BoatScores, Listing, Comp, ScoreDimension, PromptListingSummary } from '$lib/types';
 	import type { CompScore } from '$lib/comp-finder';
+	import type { BoatTraderListing } from '$lib/boattrader';
 	import BoatCard from '$lib/components/BoatCard.svelte';
 	import ScoreRadar from '$lib/components/ScoreRadar.svelte';
 	import ScoreBreakdown from '$lib/components/ScoreBreakdown.svelte';
@@ -69,6 +70,20 @@
 	let reportedComps = $state<Comp[]>([]);
 	let compScores = $state<CompScore[]>([]);
 	let loadingListings = $state(true);
+	let btListings = $state<BoatTraderListing[]>([]);
+
+	function btToPromptListings(bts: BoatTraderListing[]): PromptListingSummary[] {
+		return bts.map((bt) => ({
+			url: bt.url,
+			year: bt.year,
+			asking_price: bt.priceUSD ?? undefined,
+			location: [bt.city, bt.state].filter(Boolean).join(', ') || undefined,
+			engine_hours: bt.engineHours ?? undefined,
+			engine_info: [bt.engineMake, bt.engineModel, bt.engineHp ? `${bt.engineHp}hp` : ''].filter(Boolean).join(' ') || undefined,
+			hull_material: bt.hullMaterial ?? undefined,
+			description: bt.description ?? undefined
+		}));
+	}
 
 	const prompt = $derived(
 		boat && scores
@@ -76,6 +91,8 @@
 					boat,
 					scores,
 					listing: listings[0],
+					activeListings: btListings.length > 0 ? btToPromptListings(btListings) : undefined,
+					comps: reportedComps.length > 0 ? reportedComps : undefined,
 					use_case_primary: useCase,
 					experience_level: experience,
 					target_waters: targetWaters
@@ -147,7 +164,7 @@
 		<!-- BoatTrader listings -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="mb-4 text-lg font-semibold text-gray-900">For Sale on BoatTrader</h2>
-			<BoatTraderListings make={boat.manufacturer} model={btModel} />
+			<BoatTraderListings make={boat.manufacturer} model={btModel} onresults={(results) => { btListings = results; }} />
 		</div>
 
 		<!-- Community listings section -->

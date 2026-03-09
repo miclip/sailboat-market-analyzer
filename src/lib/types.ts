@@ -90,19 +90,30 @@ export interface Listing {
 	id: string;
 	boat_id: string;
 	yachtworld_url?: string;
+	boattrader_url?: string;
+	listing_url?: string;
 	asking_price?: number;
 	list_date?: string;
 	delist_date?: string;
 	days_on_market?: number;
+	year_built?: number;
 	location_city?: string;
 	location_state?: string;
 	location_market?: LocationMarket;
+	engine_make?: string;
+	engine_model?: string;
+	engine_hp?: number;
 	engine_hours?: number;
+	engine_year?: number;
+	hull_material?: string;
 	condition_tier?: ConditionTier;
 	rigging_age_years?: number;
 	sails_condition?: SailsCondition;
+	electronics_age_years?: number;
 	recent_refit?: boolean;
 	refit_notes?: string;
+	broker_name?: string;
+	description?: string;
 	status: ListingStatus;
 }
 
@@ -127,10 +138,29 @@ export type ScoreDimension =
 	| 'upwind'
 	| 'downwind';
 
+export interface PromptListingSummary {
+	url: string;
+	year?: number;
+	asking_price?: number;
+	location?: string;
+	engine_hours?: number;
+	engine_info?: string;
+	hull_material?: string;
+	condition?: string;
+	rigging_age_years?: number;
+	sails_condition?: string;
+	electronics_age_years?: number;
+	recent_refit?: boolean;
+	refit_notes?: string;
+	description?: string;
+	days_on_market?: number;
+}
+
 export interface PromptInputs {
 	boat: Boat;
 	scores: BoatScores;
 	listing?: Listing;
+	activeListings?: PromptListingSummary[];
 	comps?: Comp[];
 	use_case_primary: string;
 	experience_level: string;

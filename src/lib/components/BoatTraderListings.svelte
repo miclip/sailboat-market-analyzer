@@ -7,9 +7,10 @@
 	interface Props {
 		make: string;
 		model?: string;
+		onresults?: (listings: BoatTraderListing[]) => void;
 	}
 
-	let { make, model }: Props = $props();
+	let { make, model, onresults }: Props = $props();
 
 	const user = $derived(getUser());
 
@@ -28,6 +29,7 @@
 			const result = await searchListings(make, model);
 			listings = result.listings;
 			total = result.total;
+			onresults?.(listings);
 
 			// Check which listings are already tracked
 			if (user && result.listings.length > 0) {
@@ -151,6 +153,12 @@
 								{/if}
 								{#if listing.cabins}
 									<span>{listing.cabins} cabin{listing.cabins !== 1 ? 's' : ''}</span>
+								{/if}
+								{#if listing.engineHours}
+									<span>Engine: {formatNumber(listing.engineHours)}hrs</span>
+								{/if}
+								{#if listing.hullMaterial}
+									<span>{listing.hullMaterial}</span>
 								{/if}
 							</div>
 						</div>
