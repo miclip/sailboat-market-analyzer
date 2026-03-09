@@ -594,9 +594,9 @@
 						Review the listings you're tracking and generate a Claude analysis prompt.
 					</p>
 				</div>
-				{#if user && watchlistItems.length > 0}
+				{#if user && (watchlistItems.length > 0 || watchlistLoading)}
 					<button
-						onclick={() => { watchlistLoaded = false; loadWatchlist(); }}
+						onclick={() => loadWatchlist()}
 						disabled={watchlistLoading}
 						class="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
 					>
