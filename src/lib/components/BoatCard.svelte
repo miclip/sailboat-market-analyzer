@@ -23,7 +23,10 @@
 		Rig: 'Sloop is simplest. Cutter adds an inner forestay for heavy weather. Ketch has two masts for flexible sail plans. Cutter ketch combines both.',
 		Mast: 'Keel-stepped goes through the deck to the hull — stronger. Deck-stepped sits on the deck — lighter, easier to service.',
 		Cockpit: 'Center cockpits have a protected helm and larger aft cabin. Aft cockpits offer better sail handling access.',
-		Hull: 'The shape of the underwater hull. Full keel is traditional and protective. Fin keel is modern and fast.'
+		Hull: 'The shape of the underwater hull. Full keel is traditional and protective. Fin keel is modern and fast.',
+		Cabins: 'Number of separate sleeping cabins.',
+		Berths: 'Total number of sleeping positions (including settees and convertible areas).',
+		'Sea Berths': 'Berths usable while sailing — positioned low and along the centerline for comfort in a seaway.'
 	};
 </script>
 
@@ -80,6 +83,24 @@
 			<div>
 				<span class="text-gray-500">SA/D<InfoTip text={specTips['SA/D']} /></span>
 				<span class="ml-1 font-medium">{boat.sa_displacement_ratio.toFixed(1)}</span>
+			</div>
+		{/if}
+		{#if boat.cabins}
+			<div>
+				<span class="text-gray-500">Cabins<InfoTip text={specTips.Cabins} /></span>
+				<span class="ml-1 font-medium">{boat.cabins}</span>
+			</div>
+		{/if}
+		{#if boat.berths}
+			<div>
+				<span class="text-gray-500">Berths<InfoTip text={specTips.Berths} /></span>
+				<span class="ml-1 font-medium">{boat.berths}</span>
+			</div>
+		{/if}
+		{#if boat.sea_berths}
+			<div>
+				<span class="text-gray-500">Sea Berths<InfoTip text={specTips['Sea Berths']} /></span>
+				<span class="ml-1 font-medium">{boat.sea_berths}</span>
 			</div>
 		{/if}
 	</div>

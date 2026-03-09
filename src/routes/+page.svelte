@@ -2,8 +2,10 @@
 	import { boats } from '$lib/seed-data';
 	import { computeScores } from '$lib/scoring';
 	import { supabase } from '$lib/supabase';
-	import type { Boat, BoatScores, WatchlistItem } from '$lib/types';
+	import type { Boat, BoatScores, WatchlistItem, UserPreferences } from '$lib/types';
+	import { defaultPreferences } from '$lib/types';
 	import UseCaseForm from '$lib/components/UseCaseForm.svelte';
+	import PreferencesForm from '$lib/components/PreferencesForm.svelte';
 	import { getUser } from '$lib/auth.svelte';
 	import { formatLabel, formatCurrency } from '$lib/utils';
 
@@ -18,6 +20,7 @@
 	let useCase = $state('');
 	let experience = $state('');
 	let waters = $state('');
+	let preferences = $state<UserPreferences>({ ...defaultPreferences });
 
 	const user = $derived(getUser());
 
@@ -43,7 +46,7 @@
 
 	// Load watchlist when user is available and we reach step 3
 	$effect(() => {
-		if (user && step === 3 && !watchlistLoaded) {
+		if (user && step === 4 && !watchlistLoaded) {
 			watchlistLoaded = true;
 			loadWatchlist();
 		}
@@ -124,12 +127,35 @@
 		return Math.round(Math.max(0, Math.min(100, base)));
 	}
 
+	function passesHardFilters(boat: Boat): boolean {
+		const p = preferences;
+		if (p.cockpit_type && boat.cockpit_type !== p.cockpit_type) return false;
+		if (p.no_teak_decks && boat.has_teak_decks) return false;
+		if (p.min_loa_ft && boat.length_ft && boat.length_ft < p.min_loa_ft) return false;
+		if (p.max_loa_ft && boat.length_ft && boat.length_ft > p.max_loa_ft) return false;
+		return true;
+	}
+
+	function preferenceBoost(boat: Boat): number {
+		const p = preferences;
+		let boost = 0;
+		if (p.rig_preference && boat.rig_type === p.rig_preference) boost += 8;
+		if (p.galley_preference && boat.galley_layout === p.galley_preference) boost += 5;
+		if (p.prefer_keel_stepped && boat.mast_step === 'keel_stepped') boost += 5;
+		return boost;
+	}
+
 	const rankedDesigns = $derived(() => {
 		const _uc = useCase;
 		const _exp = experience;
 		const _wat = waters;
+		const _prefs = preferences;
 		return scoredBoats
-			.map((sb) => ({ ...sb, composite: compositeScore(sb.boat, sb.scores) }))
+			.filter((sb) => passesHardFilters(sb.boat))
+			.map((sb) => ({
+				...sb,
+				composite: Math.min(100, compositeScore(sb.boat, sb.scores) + preferenceBoost(sb.boat))
+			}))
 			.toSorted((a, b) => b.composite - a.composite);
 	});
 
@@ -138,6 +164,10 @@
 		experience = exp;
 		waters = w;
 		step = 2;
+	}
+
+	function handlePrefsChange(prefs: UserPreferences) {
+		preferences = prefs;
 	}
 
 	function buildAnalysisPrompt(): string {
@@ -199,8 +229,9 @@
 
 	const steps = [
 		{ num: 1, label: 'Use Case' },
-		{ num: 2, label: 'Designs' },
-		{ num: 3, label: 'Your Listings' }
+		{ num: 2, label: 'Preferences' },
+		{ num: 3, label: 'Designs' },
+		{ num: 4, label: 'Your Listings' }
 	];
 </script>
 
@@ -209,7 +240,7 @@
 	<div class="flex items-center justify-center gap-2">
 		{#each steps as s}
 			<button
-				onclick={() => { if (s.num <= step || (s.num === 2 && useCase) || (s.num === 3 && useCase)) step = s.num; }}
+				onclick={() => { if (s.num <= step || (s.num <= 3 && useCase) || (s.num === 4 && useCase)) step = s.num; }}
 				class="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all
 					{step === s.num
 					? 'bg-blue-600 text-white'
@@ -247,8 +278,26 @@
 		</section>
 	{/if}
 
-	<!-- Step 2: Explore Designs -->
+	<!-- Step 2: Preferences (optional) -->
 	{#if step === 2}
+		<section>
+			<div class="mb-6 text-center">
+				<h1 class="mb-2 text-2xl font-bold text-gray-900">Boat Preferences</h1>
+				<p class="mx-auto max-w-xl text-sm text-gray-500">
+					Optionally narrow down designs based on what you want (or don't want) in a boat.
+				</p>
+			</div>
+			<PreferencesForm
+				{preferences}
+				onchange={handlePrefsChange}
+				onnext={() => (step = 3)}
+				onskip={() => (step = 3)}
+			/>
+		</section>
+	{/if}
+
+	<!-- Step 3: Explore Designs -->
+	{#if step === 3}
 		<section>
 			<div class="mb-6">
 				<h1 class="mb-2 text-2xl font-bold text-gray-900">
@@ -306,7 +355,7 @@
 
 			<div class="mt-6 text-center">
 				<button
-					onclick={() => (step = 3)}
+					onclick={() => (step = 4)}
 					class="rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
 				>
 					Review Your Listings
@@ -315,8 +364,8 @@
 		</section>
 	{/if}
 
-	<!-- Step 3: Your Listings + Prompt -->
-	{#if step === 3}
+	<!-- Step 4: Your Listings + Prompt -->
+	{#if step === 4}
 		<section class="space-y-8">
 			<div>
 				<h1 class="mb-2 text-2xl font-bold text-gray-900">Your Tracked Listings</h1>
@@ -340,7 +389,7 @@
 						Go to a design page, search BoatTrader listings, and click "Track Listing" on any boat you're interested in.
 					</p>
 					<button
-						onclick={() => (step = 2)}
+						onclick={() => (step = 3)}
 						class="mt-4 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
 					>
 						Browse Designs

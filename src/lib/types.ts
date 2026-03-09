@@ -51,7 +51,12 @@ export interface Boat {
 	capsize_screening_value?: number;
 	displacement_length_ratio?: number;
 
+	cabins?: number;
+	berths?: number;
+	sea_berths?: number;
+
 	has_backstay?: boolean;
+	has_teak_decks?: boolean;
 	self_steering_compatible?: boolean;
 	watermaker_standard?: boolean;
 	generator_standard?: boolean;
@@ -149,6 +154,25 @@ export interface WatchlistItem {
 	notes?: string;
 	created_at: string;
 }
+
+export interface UserPreferences {
+	id?: string;
+	user_id?: string;
+	cockpit_type?: CockpitType | null;
+	no_teak_decks: boolean;
+	rig_preference?: RigType | null;
+	min_loa_ft?: number | null;
+	max_loa_ft?: number | null;
+	galley_preference?: GalleyLayout | null;
+	prefer_keel_stepped: boolean;
+	max_budget?: number | null;
+	updated_at?: string;
+}
+
+export const defaultPreferences: UserPreferences = {
+	no_teak_decks: false,
+	prefer_keel_stepped: false
+};
 
 export type PriceSnapshotStatus = 'active' | 'not_found';
 
