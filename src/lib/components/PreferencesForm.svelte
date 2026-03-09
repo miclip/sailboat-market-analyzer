@@ -40,7 +40,12 @@
 			.maybeSingle();
 
 		if (data) {
-			prefs = { ...defaultPreferences, ...data };
+			// Ensure boolean fields are never null (DB may have null for columns added after row creation)
+			const merged = { ...defaultPreferences, ...data };
+			merged.no_teak_decks = data.no_teak_decks ?? defaultPreferences.no_teak_decks;
+			merged.no_canoe_stern = data.no_canoe_stern ?? defaultPreferences.no_canoe_stern;
+			merged.prefer_keel_stepped = data.prefer_keel_stepped ?? defaultPreferences.prefer_keel_stepped;
+			prefs = merged as UserPreferences;
 			onchange(prefs);
 		}
 	}
@@ -65,17 +70,9 @@
 			updated_at: new Date().toISOString()
 		};
 
-		let { error } = await supabase
+		const { error } = await supabase
 			.from('user_preferences')
 			.upsert(payload, { onConflict: 'user_id' });
-
-		// Retry without no_canoe_stern if column doesn't exist yet
-		if (error?.message?.includes('no_canoe_stern')) {
-			delete payload.no_canoe_stern;
-			({ error } = await supabase
-				.from('user_preferences')
-				.upsert(payload, { onConflict: 'user_id' }));
-		}
 
 		if (!error) {
 			saved = true;
