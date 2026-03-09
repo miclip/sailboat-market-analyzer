@@ -265,7 +265,12 @@
 		{/if}
 
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-			<h2 class="mb-4 text-lg font-semibold text-gray-900">Generate Claude Analysis</h2>
+			<h2 class="mb-2 text-lg font-semibold text-gray-900">Get Expert Analysis</h2>
+			<p class="mb-3 text-sm text-gray-600">
+				Generate a prompt with this design's specs, listings, and scores. Copy and paste it into
+				<a href="https://claude.ai" target="_blank" rel="noopener noreferrer" class="font-medium text-blue-600 hover:text-blue-800">claude.ai</a>
+				for a detailed buying analysis.
+			</p>
 			<div class="mb-4 grid gap-4 sm:grid-cols-3">
 				<div>
 					<label for="use-case" class="mb-1 block text-sm font-medium text-gray-700">Primary Use Case</label>

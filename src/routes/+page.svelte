@@ -679,11 +679,20 @@
 
 				<!-- Generate Prompt -->
 				<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-					<h2 class="mb-2 text-lg font-semibold text-gray-900">Generate Claude Analysis</h2>
-					<p class="mb-4 text-sm text-gray-500">
-						Get a detailed comparison of your {watchlistItems.length} tracked listing{watchlistItems.length !== 1 ? 's' : ''}
-						for {useCaseLabels[useCase] ?? useCase}.
+					<h2 class="mb-2 text-lg font-semibold text-gray-900">Get Expert Analysis</h2>
+					<p class="mb-3 text-sm text-gray-600">
+						Generate a detailed prompt comparing your {watchlistItems.length} tracked listing{watchlistItems.length !== 1 ? 's' : ''}
+						for {useCaseLabels[useCase] ?? useCase}. The prompt includes your preferences, design specs, scoring breakdowns, and listing URLs.
 					</p>
+					<div class="mb-4 rounded-lg bg-blue-50 px-4 py-3 text-sm text-blue-800">
+						<p class="font-medium">How to use</p>
+						<ol class="mt-1.5 list-inside list-decimal space-y-1 text-blue-700">
+							<li>Click "Generate Prompt" below to build your analysis prompt</li>
+							<li>Copy it to your clipboard</li>
+							<li>Paste it into <a href="https://claude.ai" target="_blank" rel="noopener noreferrer" class="font-medium underline hover:text-blue-900">claude.ai</a> or another AI assistant</li>
+							<li>The AI will browse your listing URLs, extract details, and provide a comprehensive buying analysis</li>
+						</ol>
+					</div>
 					<button
 						onclick={() => (showPrompt = !showPrompt)}
 						class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
