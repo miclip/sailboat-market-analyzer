@@ -17,7 +17,7 @@ create index idx_sessions_user_id on exploration_sessions(user_id);
 
 -- Link watchlist items to sessions (nullable — existing items stay unlinked)
 alter table watchlist add column session_id uuid references exploration_sessions(id) on delete set null;
-alter table watchlist add column listing_url text;
+alter table watchlist add column if not exists listing_url text;
 create index idx_watchlist_session_id on watchlist(session_id);
 
 -- RLS
