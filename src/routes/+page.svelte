@@ -1,14 +1,11 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { boats } from '$lib/seed-data';
 	import { computeScores } from '$lib/scoring';
-	import type { Boat, BoatScores } from '$lib/types';
-	import type { BoatTraderListing } from '$lib/boattrader';
+	import { supabase } from '$lib/supabase';
+	import type { Boat, BoatScores, WatchlistItem } from '$lib/types';
 	import UseCaseForm from '$lib/components/UseCaseForm.svelte';
-	import ListingLookup from '$lib/components/ListingLookup.svelte';
-	import Watchlist from '$lib/components/Watchlist.svelte';
 	import { getUser } from '$lib/auth.svelte';
-	import { formatLabel } from '$lib/utils';
+	import { formatLabel, formatCurrency } from '$lib/utils';
 
 	interface ScoredBoat {
 		boat: Boat;
@@ -22,9 +19,38 @@
 	let experience = $state('');
 	let waters = $state('');
 
-	let watchlistRef = $state<Watchlist>();
-
 	const user = $derived(getUser());
+
+	// Watchlist state for step 3
+	let watchlistItems = $state<WatchlistItem[]>([]);
+	let watchlistLoading = $state(false);
+	let watchlistLoaded = $state(false);
+	let showPrompt = $state(false);
+
+	// Load watchlist when user is available and we reach step 3
+	$effect(() => {
+		if (user && step === 3 && !watchlistLoaded) {
+			watchlistLoaded = true;
+			loadWatchlist();
+		}
+	});
+
+	async function loadWatchlist() {
+		if (!user) return;
+		watchlistLoading = true;
+		const { data } = await supabase
+			.from('watchlist')
+			.select('*')
+			.eq('user_id', user.id)
+			.order('created_at', { ascending: false });
+		watchlistItems = data ?? [];
+		watchlistLoading = false;
+	}
+
+	async function removeItem(id: string) {
+		await supabase.from('watchlist').delete().eq('id', id);
+		watchlistItems = watchlistItems.filter((i) => i.id !== id);
+	}
 
 	// Primary score key per use case
 	const useCaseToScore: Record<string, keyof BoatScores> = {
@@ -36,49 +62,48 @@
 		circumnavigation: 'score_pacific_ready'
 	};
 
+	const useCaseLabels: Record<string, string> = {
+		bluewater: 'bluewater passage-making',
+		pacific: 'Pacific circuit',
+		coastal: 'coastal cruising',
+		liveaboard: 'liveaboard cruiser',
+		singlehand: 'singlehanded sailing',
+		circumnavigation: 'circumnavigation'
+	};
+
 	function compositeScore(boat: Boat, scores: BoatScores): number {
 		const key = useCaseToScore[useCase] ?? 'score_bluewater';
 		let base = scores[key] as number;
 
-		// Experience-based adjustments using boat properties directly
 		const loa = boat.length_ft ?? 40;
 		const disp = boat.displacement_lbs ?? 20000;
 		const rig = boat.rig_type ?? 'sloop';
 
 		if (experience === 'beginner') {
-			// Beginners: penalize large, heavy, complex boats
 			if (loa > 45) base -= (loa - 45) * 3;
 			else if (loa > 42) base -= (loa - 42) * 1.5;
 			if (loa <= 40) base += 5;
-
 			if (disp > 25000) base -= 10;
 			else if (disp < 18000) base += 5;
-
 			if (rig === 'ketch' || rig === 'schooner') base -= 10;
 			if (rig === 'sloop') base += 5;
-
 			if (boat.mast_step === 'keel_stepped') base -= 5;
 		} else if (experience === 'intermediate') {
 			if (loa > 50) base -= (loa - 50) * 2;
 			if (loa <= 42) base += 3;
 		} else if (experience === 'professional') {
-			// Professionals can handle anything, slight bonus for capability
 			base += (scores.score_bluewater as number) * 0.1;
 		}
 
-		// Waters-based adjustments
 		const protectedWaters = ['Caribbean', 'Mediterranean', 'Gulf Coast', 'Great Lakes'];
 		const openOcean = ['Pacific Ocean', 'Atlantic Ocean', 'Around the World'];
 
 		if (protectedWaters.includes(waters)) {
-			// Penalize overkill bluewater boats in protected waters
 			if (scores.score_bluewater > 85 && useCase === 'coastal') base -= 10;
-			// Bonus for comfortable, easy boats
 			base += (scores.score_coastal_cruising as number) * 0.15;
 		}
 
 		if (openOcean.includes(waters)) {
-			// Bonus for seaworthiness in open ocean
 			base += (scores.score_bluewater as number) * 0.1;
 			if (scores.score_bluewater < 50) base -= 10;
 		}
@@ -102,14 +127,67 @@
 		step = 2;
 	}
 
-	function handleSaveListing(listing: BoatTraderListing) {
-		watchlistRef?.addListing(listing);
+	function buildAnalysisPrompt(): string {
+		const lines: string[] = [
+			`You are helping a sailor evaluate boats for purchase.`,
+			'',
+			'## Buyer Profile',
+			`Use Case: ${useCaseLabels[useCase] ?? useCase}`,
+			`Experience: ${formatLabel(experience)}`,
+			`Target Waters: ${waters}`,
+			''
+		];
+
+		if (watchlistItems.length > 0) {
+			lines.push('## Boats Under Consideration', '');
+			for (const item of watchlistItems) {
+				const design = boats.find(
+					(b) => b.manufacturer.toLowerCase() === item.make.toLowerCase()
+						&& b.design_name.toLowerCase().includes(item.model.toLowerCase())
+				);
+				const scores = design ? computeScores(design) : null;
+
+				lines.push(`### ${item.year ?? ''} ${item.make} ${item.model}`);
+				lines.push(`- Asking Price: ${item.last_asking_price ? formatCurrency(item.last_asking_price) : 'Unknown'}`);
+				lines.push(`- Location: ${[item.last_location_city, item.last_location_state].filter(Boolean).join(', ') || 'Unknown'}`);
+				lines.push(`- Status: ${formatLabel(item.status)}`);
+				if (scores) {
+					const key = useCaseToScore[useCase] ?? 'score_bluewater';
+					lines.push(`- ${formatLabel(useCase)} Score: ${scores[key]}/100`);
+					lines.push(`- Bluewater Score: ${scores.score_bluewater}/100`);
+				}
+				lines.push('');
+			}
+		}
+
+		lines.push(
+			'## Analysis Requested',
+			`1. Compare these boats for ${useCaseLabels[useCase] ?? useCase} suitability`,
+			`2. Assess each boat's fit for a ${formatLabel(experience).toLowerCase()} sailor`,
+			`3. Flag any concerns for ${waters}`,
+			'4. Evaluate the asking prices — are they reasonable?',
+			'5. Rank them from best to worst fit and explain why',
+			'6. Suggest what to look for in a pre-purchase survey for each'
+		);
+
+		return lines.join('\n');
+	}
+
+	const prompt = $derived(buildAnalysisPrompt());
+
+	function statusBadge(status: string): string {
+		switch (status) {
+			case 'active': return 'bg-green-50 text-green-700';
+			case 'price_changed': return 'bg-yellow-50 text-yellow-700';
+			case 'delisted': case 'sold': return 'bg-red-50 text-red-700';
+			default: return 'bg-gray-100 text-gray-600';
+		}
 	}
 
 	const steps = [
 		{ num: 1, label: 'Use Case' },
 		{ num: 2, label: 'Designs' },
-		{ num: 3, label: 'Find a Boat' }
+		{ num: 3, label: 'Your Listings' }
 	];
 </script>
 
@@ -218,30 +296,124 @@
 					onclick={() => (step = 3)}
 					class="rounded-lg bg-blue-600 px-6 py-3 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
 				>
-					Find a Specific Boat
+					Review Your Listings
 				</button>
 			</div>
 		</section>
 	{/if}
 
-	<!-- Step 3: Find a Boat -->
+	<!-- Step 3: Your Listings + Prompt -->
 	{#if step === 3}
 		<section class="space-y-8">
 			<div>
-				<h1 class="mb-2 text-2xl font-bold text-gray-900">Find a Specific Boat</h1>
+				<h1 class="mb-2 text-2xl font-bold text-gray-900">Your Tracked Listings</h1>
 				<p class="text-sm text-gray-500">
-					Paste a listing URL or browse designs to find boats for sale.
+					Review the listings you're tracking and generate a Claude analysis prompt.
 				</p>
 			</div>
 
-			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-				<h2 class="mb-4 text-lg font-semibold text-gray-900">Look Up a Listing</h2>
-				<ListingLookup onsave={handleSaveListing} />
-			</div>
+			{#if !user}
+				<div class="rounded-lg border border-yellow-200 bg-yellow-50 p-8 text-center">
+					<p class="text-sm text-yellow-800">Sign in to see your tracked listings.</p>
+				</div>
+			{:else if watchlistLoading}
+				<div class="py-8 text-center">
+					<div class="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
+				</div>
+			{:else if watchlistItems.length === 0}
+				<div class="rounded-lg border border-gray-200 bg-gray-50 p-8 text-center">
+					<p class="text-gray-500">No tracked listings yet.</p>
+					<p class="mt-2 text-sm text-gray-400">
+						Go to a design page, search BoatTrader listings, and click "Track Listing" on any boat you're interested in.
+					</p>
+					<button
+						onclick={() => (step = 2)}
+						class="mt-4 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+					>
+						Browse Designs
+					</button>
+				</div>
+			{:else}
+				<div class="space-y-3">
+					{#each watchlistItems as item}
+						<div class="rounded-lg border border-gray-200 bg-white p-4">
+							<div class="flex items-start justify-between">
+								<div>
+									<div class="font-semibold text-gray-900">
+										{item.year ?? ''} {item.make} {item.model}
+									</div>
+									<div class="mt-1 text-sm text-gray-600">
+										{[item.last_location_city, item.last_location_state].filter(Boolean).join(', ')}
+									</div>
+									{#if item.last_checked_at}
+										<div class="mt-1 text-xs text-gray-400">
+											Last checked: {new Date(item.last_checked_at).toLocaleDateString()}
+										</div>
+									{/if}
+								</div>
+								<div class="flex flex-col items-end gap-2">
+									{#if item.last_asking_price}
+										<div class="text-lg font-bold text-blue-600">
+											{formatCurrency(item.last_asking_price)}
+										</div>
+									{/if}
+									<span class="rounded px-2 py-0.5 text-xs font-medium {statusBadge(item.status)}">
+										{formatLabel(item.status)}
+									</span>
+								</div>
+							</div>
+							<div class="mt-3 flex items-center gap-3">
+								{#if item.listing_url}
+									<a
+										href={item.listing_url}
+										target="_blank"
+										rel="noopener noreferrer"
+										class="text-xs text-blue-600 hover:text-blue-800"
+									>
+										View on BoatTrader
+									</a>
+								{/if}
+								<button
+									onclick={() => removeItem(item.id)}
+									class="text-xs text-red-500 hover:text-red-700"
+								>
+									Remove
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
 
-			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-				<Watchlist bind:this={watchlistRef} />
-			</div>
+				<!-- Generate Prompt -->
+				<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+					<h2 class="mb-2 text-lg font-semibold text-gray-900">Generate Claude Analysis</h2>
+					<p class="mb-4 text-sm text-gray-500">
+						Get a detailed comparison of your {watchlistItems.length} tracked listing{watchlistItems.length !== 1 ? 's' : ''}
+						for {useCaseLabels[useCase] ?? useCase}.
+					</p>
+					<button
+						onclick={() => (showPrompt = !showPrompt)}
+						class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+					>
+						{showPrompt ? 'Hide Prompt' : 'Generate Prompt'}
+					</button>
+				</div>
+
+				{#if showPrompt}
+					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+						<div class="mb-3 flex items-center justify-between">
+							<h3 class="text-sm font-semibold text-gray-700">Prompt</h3>
+							<button
+								onclick={() => navigator.clipboard.writeText(prompt)}
+								class="rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+							>
+								Copy to Clipboard
+							</button>
+						</div>
+						<pre class="max-h-96 overflow-auto rounded-lg bg-gray-50 p-4 text-sm text-gray-800 whitespace-pre-wrap">{prompt}</pre>
+					</div>
+				{/if}
+			{/if}
 		</section>
 	{/if}
 </div>
