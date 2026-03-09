@@ -36,6 +36,14 @@ function scoreMastStep(boat: Boat): { points: number; value: string } {
 	};
 }
 
+function scoreBackstay(boat: Boat): { points: number; value: string } {
+	if (boat.has_backstay == null) return { points: 50, value: 'unknown' };
+	return {
+		points: boat.has_backstay ? 100 : 20,
+		value: boat.has_backstay ? 'yes' : 'no'
+	};
+}
+
 function scoreCapsize(boat: Boat): { points: number; value: string } {
 	const csv = boat.capsize_screening_value;
 	if (csv == null) return { points: 50, value: 'unknown' };
@@ -268,13 +276,14 @@ function breakdown(
 
 export function computeScores(boat: Boat): BoatScores {
 	// Bluewater
-	const bwRudder = { ...scoreRudder(boat), factor: 'Rudder Type', weight: 0.25 };
+	const bwRudder = { ...scoreRudder(boat), factor: 'Rudder Type', weight: 0.2 };
 	const bwKeel = { ...scoreKeelBluewater(boat), factor: 'Keel Type', weight: 0.2 };
 	const bwMast = { ...scoreMastStep(boat), factor: 'Mast Step', weight: 0.15 };
-	const bwCapsize = { ...scoreCapsize(boat), factor: 'Capsize Screening', weight: 0.2 };
+	const bwBackstay = { ...scoreBackstay(boat), factor: 'Backstay', weight: 0.1 };
+	const bwCapsize = { ...scoreCapsize(boat), factor: 'Capsize Screening', weight: 0.15 };
 	const bwDLR = { ...scoreDLRatio(boat), factor: 'D/L Ratio', weight: 0.1 };
 	const bwMCR = { ...scoreMotionComfort(boat), factor: 'Motion Comfort', weight: 0.1 };
-	const bluewaterItems = [bwRudder, bwKeel, bwMast, bwCapsize, bwDLR, bwMCR];
+	const bluewaterItems = [bwRudder, bwKeel, bwMast, bwBackstay, bwCapsize, bwDLR, bwMCR];
 	const score_bluewater = weighted(bluewaterItems);
 
 	// Singlehand

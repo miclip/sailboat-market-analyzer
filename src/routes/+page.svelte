@@ -21,6 +21,20 @@
 
 	const user = $derived(getUser());
 
+	function scoreTextColor(score: number): string {
+		if (score >= 80) return 'text-blue-600';
+		if (score >= 60) return 'text-purple-600';
+		if (score >= 40) return 'text-orange-500';
+		return 'text-red-500';
+	}
+
+	function scoreBarColor(score: number): string {
+		if (score >= 80) return 'bg-blue-500';
+		if (score >= 60) return 'bg-purple-500';
+		if (score >= 40) return 'bg-orange-400';
+		return 'bg-red-500';
+	}
+
 	// Watchlist state for step 3
 	let watchlistItems = $state<WatchlistItem[]>([]);
 	let watchlistLoading = $state(false);
@@ -263,14 +277,14 @@
 								</div>
 							</div>
 							<div class="text-right">
-								<div class="text-2xl font-bold text-blue-600">{score}</div>
+								<div class="text-2xl font-bold {scoreTextColor(score)}">{score}</div>
 								<div class="text-xs text-gray-400">/ 100</div>
 							</div>
 						</div>
 
 						<div class="mt-3 flex items-center gap-2">
 							<div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-200">
-								<div class="h-full rounded-full bg-blue-500" style="width: {score}%"></div>
+								<div class="h-full rounded-full {scoreBarColor(score)}" style="width: {score}%"></div>
 							</div>
 						</div>
 

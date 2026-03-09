@@ -49,6 +49,7 @@ export interface Boat {
 	capsize_screening_value?: number;
 	displacement_length_ratio?: number;
 
+	has_backstay?: boolean;
 	self_steering_compatible?: boolean;
 	watermaker_standard?: boolean;
 	generator_standard?: boolean;
