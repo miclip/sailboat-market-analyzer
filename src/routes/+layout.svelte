@@ -21,6 +21,7 @@
 					<a href="/boats" class="hover:text-blue-600">Designs</a>
 					<a href="/listings" class="hover:text-blue-600">Listings</a>
 					<a href="/compare" class="hover:text-blue-600">Compare</a>
+					<a href="/guide" class="hover:text-blue-600">Guide</a>
 				</nav>
 				<AuthButton />
 			</div>

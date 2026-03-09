@@ -487,13 +487,43 @@
 
 	<!-- Step 1: Use Case -->
 	{#if step === 1}
-		<section>
-			<div class="mb-6 text-center">
-				<h1 class="mb-2 text-3xl font-bold text-gray-900">Find Your Boat</h1>
-				<p class="mx-auto max-w-xl text-gray-600">
-					Tell us how you plan to sail and we'll rank designs by what matters for your use case.
+		<section class="space-y-10">
+			<div class="text-center">
+				<h1 class="mb-3 text-3xl font-bold text-gray-900">Find the Right Boat for How You Sail</h1>
+				<p class="mx-auto max-w-2xl text-lg text-gray-600">
+					Buying a bluewater sailboat is a multi-year journey. This tool helps you evaluate designs, track listings, compare prices, and generate expert analysis prompts — all tailored to your specific use case.
 				</p>
 			</div>
+
+			<!-- How it works -->
+			<div class="mx-auto max-w-3xl">
+				<div class="grid gap-4 sm:grid-cols-4">
+					<div class="rounded-lg border border-gray-200 bg-white p-4 text-center">
+						<div class="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">1</div>
+						<h3 class="text-sm font-semibold text-gray-900">Define Use Case</h3>
+						<p class="mt-1 text-xs text-gray-500">Tell us how you'll sail — bluewater, coastal, singlehanded, liveaboard</p>
+					</div>
+					<div class="rounded-lg border border-gray-200 bg-white p-4 text-center">
+						<div class="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">2</div>
+						<h3 class="text-sm font-semibold text-gray-900">Set Preferences</h3>
+						<p class="mt-1 text-xs text-gray-500">Filter by cockpit type, rig, size, budget, and features you care about</p>
+					</div>
+					<div class="rounded-lg border border-gray-200 bg-white p-4 text-center">
+						<div class="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">3</div>
+						<h3 class="text-sm font-semibold text-gray-900">Explore & Track</h3>
+						<p class="mt-1 text-xs text-gray-500">Browse ranked designs, search BoatTrader listings, and track the ones you like</p>
+					</div>
+					<div class="rounded-lg border border-gray-200 bg-white p-4 text-center">
+						<div class="mx-auto mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">4</div>
+						<h3 class="text-sm font-semibold text-gray-900">Get AI Analysis</h3>
+						<p class="mt-1 text-xs text-gray-500">Generate a prompt for Claude to analyze your shortlist with design data and listing URLs</p>
+					</div>
+				</div>
+				<div class="mt-4 text-center">
+					<a href="/guide" class="text-sm text-blue-600 hover:text-blue-800">Read the full guide</a>
+				</div>
+			</div>
+
 			<UseCaseForm onsubmit={handleUseCaseSubmit} />
 		</section>
 	{/if}
