@@ -318,23 +318,56 @@
 	}
 
 	function buildAnalysisPrompt(): string {
+		const ucLabel = useCaseLabels[useCase] ?? useCase;
+		const expLabel = formatLabel(experience).toLowerCase();
+		const scoreDimKey = useCaseToScore[useCase] ?? 'score_bluewater';
+		// Map score key to breakdown key
+		const breakdownKey = scoreDimKey.replace('score_', '');
+
 		const lines: string[] = [
-			`You are helping a sailor evaluate boats for purchase. Where listing URLs are provided, browse them to extract engine hours, rigging condition, refit history, sail inventory, and any details not listed below.`,
+			`You are an expert marine surveyor and sailing advisor helping a sailor evaluate boats for purchase. Where listing URLs are provided, browse them to extract engine hours, rigging condition, refit history, sail inventory, and any details not listed below. Consider the total cost of ownership (purchase + delivery + refit to make passage-ready).`,
 			'',
 			'## Buyer Profile',
-			`Use Case: ${useCaseLabels[useCase] ?? useCase}`,
-			`Experience: ${formatLabel(experience)}`,
+			`Primary Use Case: ${ucLabel}`,
+			`Experience Level: ${expLabel}`,
 			`Target Waters: ${waters}`,
-			''
 		];
 
+		// Add buyer preferences
+		const prefLines: string[] = [];
+		if (preferences.max_budget) {
+			prefLines.push(`Max Budget (purchase only): ${formatCurrency(preferences.max_budget)}`);
+		}
+		if (preferences.cockpit_type) {
+			prefLines.push(`Cockpit Preference: ${formatLabel(preferences.cockpit_type)}`);
+		}
+		if (preferences.rig_preference) {
+			prefLines.push(`Rig Preference: ${formatLabel(preferences.rig_preference)}`);
+		}
+		if (preferences.galley_preference) {
+			prefLines.push(`Galley Preference: ${formatLabel(preferences.galley_preference)}`);
+		}
+		if (preferences.min_loa_ft || preferences.max_loa_ft) {
+			const min = preferences.min_loa_ft ? `${preferences.min_loa_ft}ft` : 'any';
+			const max = preferences.max_loa_ft ? `${preferences.max_loa_ft}ft` : 'any';
+			prefLines.push(`LOA Range: ${min} – ${max}`);
+		}
+		if (preferences.no_teak_decks) prefLines.push('Excluding: teak decks');
+		if (preferences.no_canoe_stern) prefLines.push('Excluding: canoe stern');
+		if (preferences.prefer_keel_stepped) prefLines.push('Preference: keel-stepped mast');
+
+		if (prefLines.length > 0) {
+			lines.push('', '## Buyer Preferences');
+			for (const pl of prefLines) lines.push(pl);
+		}
+
 		if (watchlistItems.length > 0) {
-			lines.push('## Boats Under Consideration', '');
+			lines.push('', '## Boats Under Consideration');
 			for (const item of watchlistItems) {
 				const design = matchDesign(item.make, item.model);
 				const scores = design ? computeScores(design) : null;
 
-				lines.push(`### ${item.year ?? ''} ${item.make} ${item.model}`);
+				lines.push('', `### ${item.year ?? ''} ${item.make} ${item.model}`);
 				if (item.listing_url) {
 					lines.push(`- Listing URL: ${item.listing_url}`);
 				}
@@ -346,7 +379,7 @@
 					lines.push(`- LOA: ${design.length_ft ?? '?'}ft | Beam: ${design.beam_ft ?? '?'}ft | LWL: ${design.lwl_ft ?? '?'}ft`);
 					lines.push(`- Displacement: ${design.displacement_lbs ? formatNumber(design.displacement_lbs) + 'lbs' : '?'} | Ballast: ${design.ballast_lbs ? formatNumber(design.ballast_lbs) + 'lbs' : '?'} (${design.ballast_ratio ? (design.ballast_ratio * 100).toFixed(0) + '%' : '?'})`);
 					lines.push(`- D/L: ${design.displacement_length_ratio?.toFixed(0) ?? '?'} | SA/D: ${design.sa_displacement_ratio?.toFixed(1) ?? '?'} | Sail Area: ${design.sail_area_sqft ? formatNumber(design.sail_area_sqft) + 'sqft' : '?'}`);
-					lines.push(`- Capsize Screening: ${design.capsize_screening_value?.toFixed(2) ?? '?'} | Motion Comfort: ${design.motion_comfort_ratio?.toFixed(1) ?? '?'}`);
+					lines.push(`- Capsize Screening: ${design.capsize_screening_value?.toFixed(2) ?? '?'} (< 2.0 offshore capable) | Motion Comfort: ${design.motion_comfort_ratio?.toFixed(1) ?? '?'} (30+ good for bluewater)`);
 					lines.push(`- Rig: ${design.rig_type ? formatLabel(design.rig_type) : '?'} | Keel: ${design.keel_type ? formatLabel(design.keel_type) : '?'} | Rudder: ${design.rudder_type ? formatLabel(design.rudder_type) : '?'}`);
 					lines.push(`- Cockpit: ${design.cockpit_type ? formatLabel(design.cockpit_type) : '?'} | Hull: ${design.hull_type ? formatLabel(design.hull_type) : '?'} | Stern: ${design.stern_type ? formatLabel(design.stern_type) : '?'}`);
 					lines.push(`- Mast: ${design.mast_step ? formatLabel(design.mast_step) : '?'} | Backstay: ${design.has_backstay == null ? '?' : design.has_backstay ? 'Yes' : 'No'} | Teak Decks: ${design.has_teak_decks == null ? '?' : design.has_teak_decks ? 'Yes' : 'No'}`);
@@ -359,23 +392,34 @@
 				}
 
 				if (scores) {
-					const key = useCaseToScore[useCase] ?? 'score_bluewater';
-					lines.push(`- ${formatLabel(useCase)} Score: ${scores[key]}/100`);
+					const primaryScore = scores[scoreDimKey as keyof typeof scores] as number;
+					lines.push(`- ${formatLabel(useCase)} Score: ${primaryScore}/100`);
 					lines.push(`- Bluewater Score: ${scores.score_bluewater}/100`);
+
+					// Include score breakdown for the primary use case
+					const breakdown = scores.score_breakdown?.[breakdownKey];
+					if (breakdown && breakdown.length > 0) {
+						lines.push(`- Score Factors (${formatLabel(useCase)}):`);
+						for (const factor of breakdown) {
+							lines.push(`  - ${factor.factor}: ${factor.points}/${factor.weight} (${factor.value})`);
+						}
+					}
 				}
-				lines.push('');
 			}
 		}
 
 		lines.push(
+			'',
 			'## Analysis Requested',
-			`1. Compare these boats for ${useCaseLabels[useCase] ?? useCase} suitability`,
-			`2. Assess each boat's fit for a ${formatLabel(experience).toLowerCase()} sailor`,
-			`3. Flag any concerns for ${waters}`,
-			'4. Evaluate the asking prices — are they reasonable?',
-			'5. Rank them from best to worst fit and explain why',
-			'6. Suggest what to look for in a pre-purchase survey for each',
-			'7. For each listing URL, extract and summarize: engine hours, rigging age/condition, recent refits, sail inventory, and any red flags from the description or photos'
+			`1. **Design Comparison**: Compare these boats for ${ucLabel} suitability. Explain how the score breakdowns above reveal each design's strengths and weaknesses.`,
+			`2. **Experience Fit**: Assess each boat's fit for a ${expLabel} sailor — what will be challenging, what systems to learn first.`,
+			`3. **Waters-Specific Concerns**: Flag any concerns specific to ${waters} — currents, tides, weather patterns, marina access for these boat sizes, cold/wet weather livability.`,
+			`4. **Price Analysis**: Evaluate each asking price against current market data. For boats located far from ${waters}, estimate delivery costs (sailing, shipping, or trucking).`,
+			'5. **Total Cost of Ownership**: For each boat, estimate the refit budget to make it passage-ready for the target waters. Consider age-appropriate items (standing rigging, electronics, engine, sails, safety gear).',
+			'6. **Ranking**: Rank from best to worst fit considering the full picture (design suitability + price + condition + location + refit needs). Explain your reasoning.',
+			'7. **Survey Focus**: List the 5 most critical pre-purchase survey items for each specific design and vintage.',
+			'8. **Listing Deep-Dive**: For each listing URL, extract and summarize: engine hours, rigging age/condition, recent refits, sail inventory, electronics, safety equipment, and any red flags from the description or photos.',
+			'9. **Alternatives**: If any of these boats have significant gaps for the use case, suggest 2-3 better-suited alternatives available in a similar price range.'
 		);
 
 		return lines.join('\n');
