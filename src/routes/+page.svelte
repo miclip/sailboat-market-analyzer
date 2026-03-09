@@ -146,8 +146,11 @@
 	let watchlistLoaded = $state(false);
 	let showPrompt = $state(false);
 
-	// Load watchlist when user is available and we reach step 3
+	// Load watchlist when user is available and we reach step 4
+	// Also reload when activeSessionId changes
 	$effect(() => {
+		// Touch activeSessionId so this effect re-runs on session switch
+		const _sid = activeSessionId;
 		if (user && step === 4 && !watchlistLoaded) {
 			watchlistLoaded = true;
 			loadWatchlist();
@@ -162,7 +165,8 @@
 			.select('*')
 			.eq('user_id', user.id);
 		if (activeSessionId) {
-			query = query.eq('session_id', activeSessionId);
+			// Show items for this session plus any unlinked items
+			query = query.or(`session_id.eq.${activeSessionId},session_id.is.null`);
 		}
 		const { data } = await query.order('created_at', { ascending: false });
 		watchlistItems = data ?? [];
