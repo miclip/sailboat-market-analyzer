@@ -172,7 +172,7 @@
 				{#each rankedDesigns() as { boat, scores, composite }, i}
 					{@const score = composite}
 					<a
-						href="/boats/{boat.id}"
+						href="/boats/{boat.id}?uc={useCase}&exp={experience}&waters={encodeURIComponent(waters)}"
 						class="rounded-lg border border-gray-200 bg-white p-5 shadow-sm hover:border-blue-300 hover:shadow transition-all"
 					>
 						<div class="flex items-start justify-between">

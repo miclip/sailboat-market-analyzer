@@ -6,7 +6,7 @@
 	import { buildPrompt } from '$lib/prompt-builder';
 	import { supabase } from '$lib/supabase';
 	import { scoreComps } from '$lib/comp-finder';
-	import type { Boat, BoatScores, Listing, Comp } from '$lib/types';
+	import type { Boat, BoatScores, Listing, Comp, ScoreDimension } from '$lib/types';
 	import type { CompScore } from '$lib/comp-finder';
 	import BoatCard from '$lib/components/BoatCard.svelte';
 	import ScoreRadar from '$lib/components/ScoreRadar.svelte';
@@ -25,10 +25,35 @@
 	);
 	const scores = $derived(boat ? computeScores(boat) : null);
 
+	// Map short use case keys to prompt-friendly labels
+	const useCaseLabels: Record<string, string> = {
+		bluewater: 'bluewater passage-making',
+		pacific: 'Pacific circuit',
+		coastal: 'coastal cruising',
+		liveaboard: 'liveaboard cruiser',
+		singlehand: 'singlehanded sailing',
+		circumnavigation: 'circumnavigation'
+	};
+
+	// Map use case keys to score dimension keys
+	const useCaseToDimension: Record<string, string> = {
+		bluewater: 'bluewater',
+		pacific: 'bluewater',
+		coastal: 'coastal_cruising',
+		liveaboard: 'liveaboard',
+		singlehand: 'singlehand',
+		circumnavigation: 'bluewater'
+	};
+
+	const qsUc = page.url.searchParams.get('uc') ?? '';
+	const qsExp = page.url.searchParams.get('exp') ?? '';
+	const qsWaters = page.url.searchParams.get('waters') ?? '';
+
 	let showPrompt = $state(false);
-	let useCase = $state('bluewater passage-making');
-	let experience = $state('intermediate');
-	let targetWaters = $state('Pacific Ocean');
+	let useCase = $state(useCaseLabels[qsUc] ?? 'bluewater passage-making');
+	let experience = $state(qsExp || 'intermediate');
+	let targetWaters = $state(qsWaters || 'Pacific Ocean');
+	const scoreDimension = (useCaseToDimension[qsUc] ?? 'bluewater') as ScoreDimension;
 
 	let listings = $state<Listing[]>([]);
 	let reportedComps = $state<Comp[]>([]);
@@ -106,7 +131,7 @@
 
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="mb-4 text-lg font-semibold text-gray-900">Score Breakdown</h2>
-			<ScoreBreakdown {scores} />
+			<ScoreBreakdown {scores} initialDimension={scoreDimension} />
 		</div>
 
 		<!-- BoatTrader listings -->

@@ -4,11 +4,15 @@
 
 	interface Props {
 		scores: BoatScores;
+		initialDimension?: ScoreDimension;
 	}
 
-	let { scores }: Props = $props();
+	let { scores, initialDimension }: Props = $props();
 
 	let selectedDimension = $state<ScoreDimension>('bluewater');
+	$effect(() => {
+		if (initialDimension) selectedDimension = initialDimension;
+	});
 
 	const dimensionOptions: { key: ScoreDimension; label: string; score: number }[] = $derived([
 		{ key: 'coastal_cruising', label: 'Coastal Cruising', score: scores.score_coastal_cruising },
