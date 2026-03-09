@@ -7,7 +7,9 @@
 	import { defaultPreferences } from '$lib/types';
 	import UseCaseForm from '$lib/components/UseCaseForm.svelte';
 	import PreferencesForm from '$lib/components/PreferencesForm.svelte';
+	import SessionBar from '$lib/components/SessionBar.svelte';
 	import { getUser } from '$lib/auth.svelte';
+	import { getActiveSessionId, setActiveSessionId as setSessionId, saveSessionDebounced } from '$lib/session.svelte';
 	import { formatLabel, formatCurrency } from '$lib/utils';
 
 	interface ScoredBoat {
@@ -23,6 +25,10 @@
 	const qsExp = page.url.searchParams.get('exp') ?? '';
 	const qsWaters = page.url.searchParams.get('waters') ?? '';
 	const qsPrefs = page.url.searchParams.get('prefs');
+	const qsSid = page.url.searchParams.get('sid');
+
+	// Restore active session from URL
+	if (qsSid) setSessionId(qsSid);
 
 	let step = $state(qsStep >= 1 && qsStep <= 4 ? qsStep : 1);
 	let useCase = $state(qsUc || '');
@@ -48,10 +54,41 @@
 		if (Object.keys(diff).length > 0) {
 			p.set('prefs', JSON.stringify(diff));
 		}
+		if (activeSessionId) {
+			p.set('sid', activeSessionId);
+		}
 		return p.toString();
 	}
 
 	const user = $derived(getUser());
+	const activeSessionId = $derived(getActiveSessionId());
+
+	// Auto-save session state when it changes
+	$effect(() => {
+		const sid = activeSessionId;
+		if (!sid) return;
+		// Touch all reactive deps we want to track
+		const _uc = useCase;
+		const _exp = experience;
+		const _wat = waters;
+		const _prefs = preferences;
+		const _step = step;
+		saveSessionDebounced(sid, {
+			use_case: _uc,
+			experience: _exp,
+			waters: _wat,
+			preferences: _prefs,
+			current_step: _step
+		});
+	});
+
+	function handleSessionLoad(state: { use_case: string; experience: string; waters: string; preferences: UserPreferences; current_step: number }) {
+		useCase = state.use_case;
+		experience = state.experience;
+		waters = state.waters;
+		preferences = state.preferences;
+		step = state.current_step >= 1 && state.current_step <= 4 ? state.current_step : 1;
+	}
 
 	function scoreTextColor(score: number): string {
 		if (score >= 80) return 'text-blue-600';
@@ -84,11 +121,14 @@
 	async function loadWatchlist() {
 		if (!user) return;
 		watchlistLoading = true;
-		const { data } = await supabase
+		let query = supabase
 			.from('watchlist')
 			.select('*')
-			.eq('user_id', user.id)
-			.order('created_at', { ascending: false });
+			.eq('user_id', user.id);
+		if (activeSessionId) {
+			query = query.eq('session_id', activeSessionId);
+		}
+		const { data } = await query.order('created_at', { ascending: false });
 		watchlistItems = data ?? [];
 		watchlistLoading = false;
 	}
@@ -266,6 +306,16 @@
 </script>
 
 <div class="space-y-8">
+	<!-- Session bar -->
+	<SessionBar
+		{useCase}
+		{experience}
+		{waters}
+		{preferences}
+		currentStep={step}
+		onload={handleSessionLoad}
+	/>
+
 	<!-- Step indicator -->
 	<div class="flex items-center justify-center gap-2">
 		{#each steps as s}

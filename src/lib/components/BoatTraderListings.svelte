@@ -7,10 +7,11 @@
 	interface Props {
 		make: string;
 		model?: string;
+		sessionId?: string | null;
 		onresults?: (listings: BoatTraderListing[]) => void;
 	}
 
-	let { make, model, onresults }: Props = $props();
+	let { make, model, sessionId, onresults }: Props = $props();
 
 	const user = $derived(getUser());
 
@@ -62,6 +63,7 @@
 			last_location_city: listing.city,
 			last_location_state: listing.state,
 			listing_url: listing.url,
+			session_id: sessionId || null,
 			status: 'active',
 			last_checked_at: new Date().toISOString()
 		});

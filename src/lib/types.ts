@@ -167,6 +167,19 @@ export interface PromptInputs {
 	target_waters: string;
 }
 
+export interface ExplorationSession {
+	id: string;
+	user_id: string;
+	name: string;
+	use_case?: string;
+	experience?: string;
+	waters?: string;
+	preferences: UserPreferences;
+	current_step: number;
+	created_at: string;
+	updated_at: string;
+}
+
 export type WatchlistStatus = 'active' | 'sold' | 'delisted' | 'price_changed' | 'unknown';
 
 export interface WatchlistItem {
@@ -174,6 +187,7 @@ export interface WatchlistItem {
 	user_id: string;
 	boattrader_id: number;
 	boat_design_id?: string;
+	session_id?: string;
 	make: string;
 	model: string;
 	year?: number;

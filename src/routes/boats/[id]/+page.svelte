@@ -50,6 +50,7 @@
 	const qsExp = page.url.searchParams.get('exp') ?? '';
 	const qsWaters = page.url.searchParams.get('waters') ?? '';
 	const qsPrefs = page.url.searchParams.get('prefs') ?? '';
+	const qsSid = page.url.searchParams.get('sid') ?? '';
 
 	// Build back link preserving all state
 	const backParams = new URLSearchParams();
@@ -58,6 +59,7 @@
 	if (qsExp) backParams.set('exp', qsExp);
 	if (qsWaters) backParams.set('waters', qsWaters);
 	if (qsPrefs) backParams.set('prefs', qsPrefs);
+	if (qsSid) backParams.set('sid', qsSid);
 	const backHref = `/?${backParams.toString()}`;
 
 	let showPrompt = $state(false);
@@ -164,7 +166,7 @@
 		<!-- BoatTrader listings -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="mb-4 text-lg font-semibold text-gray-900">For Sale on BoatTrader</h2>
-			<BoatTraderListings make={boat.manufacturer} model={btModel} onresults={(results) => { btListings = results; }} />
+			<BoatTraderListings make={boat.manufacturer} model={btModel} sessionId={qsSid || null} onresults={(results) => { btListings = results; }} />
 		</div>
 
 		<!-- Community listings section -->
