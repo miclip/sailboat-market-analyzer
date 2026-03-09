@@ -6,6 +6,7 @@ export type CockpitType = 'center' | 'aft';
 export type HullType = 'full_keel' | 'fin_keel' | 'modified_full' | 'twin_keel';
 export type ForefootDepth = 'deep' | 'moderate' | 'cut_away';
 export type GalleyLayout = 'u_shaped' | 'l_shaped' | 'corridor' | 'open_linear';
+export type SternType = 'canoe' | 'transom' | 'sugar_scoop' | 'reverse_transom';
 
 export type ConditionTier = 'offshore_ready' | 'good' | 'fair' | 'project';
 export type SailsCondition = 'new' | 'good' | 'fair' | 'worn';
@@ -43,6 +44,7 @@ export interface Boat {
 	cockpit_type?: CockpitType;
 	hull_type?: HullType;
 	galley_layout?: GalleyLayout;
+	stern_type?: SternType;
 
 	underbody_pct?: number;
 	forefoot_depth?: ForefootDepth;
@@ -160,6 +162,7 @@ export interface UserPreferences {
 	user_id?: string;
 	cockpit_type?: CockpitType | null;
 	no_teak_decks: boolean;
+	no_canoe_stern: boolean;
 	rig_preference?: RigType | null;
 	min_loa_ft?: number | null;
 	max_loa_ft?: number | null;
@@ -171,6 +174,7 @@ export interface UserPreferences {
 
 export const defaultPreferences: UserPreferences = {
 	no_teak_decks: false,
+	no_canoe_stern: false,
 	prefer_keel_stepped: false
 };
 
