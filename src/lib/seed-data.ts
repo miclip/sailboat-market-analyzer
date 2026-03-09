@@ -143,7 +143,7 @@ export const boats: Boat[] = [
 		keel_type: 'modified_fin',
 		mast_step: 'keel_stepped',
 		rig_type: 'cutter',
-		cockpit_type: 'aft',
+		cockpit_type: 'center',
 		hull_type: 'modified_full',
 		galley_layout: 'l_shaped',
 		forefoot_depth: 'moderate',
@@ -170,7 +170,7 @@ export const boats: Boat[] = [
 		lwl_ft: 29.3,
 		sail_area_sqft: 650,
 		sa_displacement_ratio: 15.6,
-		rudder_type: 'skeg_hung',
+		rudder_type: 'full_keel_integrated',
 		keel_type: 'full',
 		mast_step: 'keel_stepped',
 		rig_type: 'cutter',
@@ -201,7 +201,7 @@ export const boats: Boat[] = [
 		lwl_ft: 32.0,
 		sail_area_sqft: 740,
 		sa_displacement_ratio: 15.3,
-		rudder_type: 'skeg_hung',
+		rudder_type: 'full_keel_integrated',
 		keel_type: 'full',
 		mast_step: 'keel_stepped',
 		rig_type: 'cutter',
@@ -526,7 +526,7 @@ export const boats: Boat[] = [
 		self_steering_compatible: true,
 		watermaker_standard: false,
 		generator_standard: false,
-		notes: 'Bob Harris design. Hugely popular bluewater cruiser. Double-ender, heavily built. Great value.'
+		notes: 'Robert Perry design. Hugely popular bluewater cruiser. Double-ender, heavily built. Great value.'
 	},
 	{
 		id: 'tayana-42',

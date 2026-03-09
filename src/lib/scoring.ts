@@ -31,7 +31,7 @@ function scoreKeelBluewater(boat: Boat): { points: number; value: string } {
 
 function scoreMastStep(boat: Boat): { points: number; value: string } {
 	return {
-		points: boat.mast_step === 'keel_stepped' ? 100 : 40,
+		points: boat.mast_step === 'keel_stepped' ? 100 : 60,
 		value: boat.mast_step ?? 'unknown'
 	};
 }
@@ -83,6 +83,14 @@ function scoreMotionComfortCoastal(boat: Boat): { points: number; value: string 
 	return { points: Math.round(points), value: mcr.toFixed(1) };
 }
 
+function scoreBallastRatio(boat: Boat): { points: number; value: string } {
+	const br = boat.ballast_ratio;
+	if (br == null) return { points: 50, value: 'unknown' };
+	// Higher is better for bluewater: 0.25 → 0, 0.42 → 100
+	const points = clamp(lerp(br, 0.25, 0.42, 0, 100), 0, 100);
+	return { points: Math.round(points), value: br.toFixed(2) };
+}
+
 function scoreCockpit(boat: Boat): { points: number; value: string } {
 	return {
 		points: boat.cockpit_type === 'center' ? 100 : 60,
@@ -114,8 +122,14 @@ function scoreSelfSteering(boat: Boat): { points: number; value: string } {
 function scoreLOASinglehand(boat: Boat): { points: number; value: string } {
 	const loa = boat.length_ft;
 	if (loa == null) return { points: 50, value: 'unknown' };
-	// < 45ft is ideal for singlehand, > 55ft gets tough
-	const points = clamp(lerp(loa, 60, 35, 0, 100), 0, 100);
+	// Peaks at 38ft — manageable size with enough boat
+	let points: number;
+	if (loa < 38) {
+		points = lerp(loa, 28, 38, 40, 100);
+	} else {
+		points = lerp(loa, 38, 55, 100, 0);
+	}
+	points = clamp(points, 0, 100);
 	return { points: Math.round(points), value: `${loa}ft` };
 }
 
@@ -139,6 +153,21 @@ function scoreSADSinglehand(boat: Boat): { points: number; value: string } {
 		points = lerp(sad, 18, 23, 100, 30);
 	} else {
 		points = 100;
+	}
+	return { points: Math.round(clamp(points, 0, 100)), value: sad.toFixed(1) };
+}
+
+function scoreSADCoastal(boat: Boat): { points: number; value: string } {
+	const sad = boat.sa_displacement_ratio;
+	if (sad == null) return { points: 50, value: 'unknown' };
+	// Moderate power is ideal for coastal — peaks at 15-17
+	let points: number;
+	if (sad < 14) {
+		points = lerp(sad, 10, 14, 20, 80);
+	} else if (sad <= 18) {
+		points = 100;
+	} else {
+		points = lerp(sad, 18, 22, 100, 40);
 	}
 	return { points: Math.round(clamp(points, 0, 100)), value: sad.toFixed(1) };
 }
@@ -307,14 +336,15 @@ function breakdown(
 export function computeScores(boat: Boat): BoatScores {
 	// Bluewater
 	const bwRudder = { ...scoreRudder(boat), factor: 'Rudder Type', weight: 0.2 };
-	const bwKeel = { ...scoreKeelBluewater(boat), factor: 'Keel Type', weight: 0.15 };
-	const bwMast = { ...scoreMastStep(boat), factor: 'Mast Step', weight: 0.15 };
+	const bwKeel = { ...scoreKeelBluewater(boat), factor: 'Keel Type', weight: 0.1 };
+	const bwMast = { ...scoreMastStep(boat), factor: 'Mast Step', weight: 0.1 };
+	const bwBallast = { ...scoreBallastRatio(boat), factor: 'Ballast Ratio', weight: 0.1 };
 	const bwBackstay = { ...scoreBackstay(boat), factor: 'Backstay', weight: 0.1 };
 	const bwGalley = { ...scoreGalleyOffshore(boat), factor: 'Galley Safety', weight: 0.1 };
 	const bwCapsize = { ...scoreCapsize(boat), factor: 'Capsize Screening', weight: 0.1 };
 	const bwDLR = { ...scoreDLRatio(boat), factor: 'D/L Ratio', weight: 0.1 };
 	const bwMCR = { ...scoreMotionComfort(boat), factor: 'Motion Comfort', weight: 0.1 };
-	const bluewaterItems = [bwRudder, bwKeel, bwMast, bwBackstay, bwGalley, bwCapsize, bwDLR, bwMCR];
+	const bluewaterItems = [bwRudder, bwKeel, bwMast, bwBallast, bwBackstay, bwGalley, bwCapsize, bwDLR, bwMCR];
 	const score_bluewater = weighted(bluewaterItems);
 
 	// Singlehand
@@ -349,7 +379,7 @@ export function computeScores(boat: Boat): BoatScores {
 	// Coastal Cruising — ease of handling, right-sized, good performance
 	const ccEase = { ...scoreEaseOfHandling(boat), factor: 'Ease of Handling', weight: 0.3 };
 	const ccSize = { ...scoreSizeCoastal(boat), factor: 'Size', weight: 0.25 };
-	const ccSAD = { ...scoreSAD(boat), factor: 'SA/D Ratio', weight: 0.2 };
+	const ccSAD = { ...scoreSADCoastal(boat), factor: 'SA/D Ratio', weight: 0.2 };
 	const ccMCR = { ...scoreMotionComfortCoastal(boat), factor: 'Motion Comfort', weight: 0.15 };
 	const ccCapsize = { ...scoreCapsize(boat), factor: 'Stability', weight: 0.1 };
 	const coastalItems = [ccEase, ccSize, ccSAD, ccMCR, ccCapsize];

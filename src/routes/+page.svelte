@@ -101,7 +101,6 @@
 			else if (disp < 18000) base += 5;
 			if (rig === 'ketch' || rig === 'schooner') base -= 10;
 			if (rig === 'sloop') base += 5;
-			if (boat.mast_step === 'keel_stepped') base -= 5;
 		} else if (experience === 'intermediate') {
 			if (loa > 50) base -= (loa - 50) * 2;
 			if (loa <= 42) base += 3;
