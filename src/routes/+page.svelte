@@ -12,6 +12,7 @@
 	import { getUser } from '$lib/auth.svelte';
 	import { getActiveSessionId, setActiveSessionId as setSessionId, saveSessionDebounced } from '$lib/session.svelte';
 	import { formatLabel, formatCurrency, formatNumber } from '$lib/utils';
+	import PromptOutput from '$lib/components/PromptOutput.svelte';
 
 	interface ScoredBoat {
 		boat: Boat;
@@ -692,18 +693,7 @@
 				</div>
 
 				{#if showPrompt}
-					<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-						<div class="mb-3 flex items-center justify-between">
-							<h3 class="text-sm font-semibold text-gray-700">Prompt</h3>
-							<button
-								onclick={() => navigator.clipboard.writeText(prompt)}
-								class="rounded border border-gray-300 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-							>
-								Copy to Clipboard
-							</button>
-						</div>
-						<pre class="max-h-96 overflow-auto rounded-lg bg-gray-50 p-4 text-sm text-gray-800 whitespace-pre-wrap">{prompt}</pre>
-					</div>
+					<PromptOutput {prompt} />
 				{/if}
 			{/if}
 		</section>
