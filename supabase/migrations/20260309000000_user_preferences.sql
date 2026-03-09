@@ -3,6 +3,7 @@ create table if not exists user_preferences (
   user_id uuid references auth.users(id) on delete cascade not null unique,
   cockpit_type text,           -- 'center', 'aft', or null (no preference)
   no_teak_decks boolean default false,
+  no_canoe_stern boolean default false,
   rig_preference text,         -- 'sloop', 'cutter', 'ketch', 'cutter_ketch', or null
   min_loa_ft numeric,
   max_loa_ft numeric,

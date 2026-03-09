@@ -24,6 +24,7 @@
 		Mast: 'Keel-stepped goes through the deck to the hull — stronger. Deck-stepped sits on the deck — lighter, easier to service.',
 		Cockpit: 'Center cockpits have a protected helm and larger aft cabin. Aft cockpits offer better sail handling access.',
 		Hull: 'The shape of the underwater hull. Full keel is traditional and protective. Fin keel is modern and fast.',
+		Stern: 'Transom sterns are flat and practical. Sugar scoops have swim platforms. Canoe sterns look classic but make mounting gear harder.',
 		Cabins: 'Number of separate sleeping cabins.',
 		Berths: 'Total number of sleeping positions (including settees and convertible areas).',
 		'Sea Berths': 'Berths usable while sailing — positioned low and along the centerline for comfort in a seaway.'
@@ -140,6 +141,12 @@
 			<div>
 				<span class="text-gray-500">Hull<InfoTip text={specTips.Hull} /></span>
 				<span class="ml-1 font-medium">{formatLabel(boat.hull_type)}</span>
+			</div>
+		{/if}
+		{#if boat.stern_type}
+			<div>
+				<span class="text-gray-500">Stern<InfoTip text={specTips.Stern} /></span>
+				<span class="ml-1 font-medium">{formatLabel(boat.stern_type)}</span>
 			</div>
 		{/if}
 	</div>

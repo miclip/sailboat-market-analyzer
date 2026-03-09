@@ -131,6 +131,7 @@
 		const p = preferences;
 		if (p.cockpit_type && boat.cockpit_type !== p.cockpit_type) return false;
 		if (p.no_teak_decks && boat.has_teak_decks) return false;
+		if (p.no_canoe_stern && boat.stern_type === 'canoe') return false;
 		if (p.min_loa_ft && boat.length_ft && boat.length_ft < p.min_loa_ft) return false;
 		if (p.max_loa_ft && boat.length_ft && boat.length_ft > p.max_loa_ft) return false;
 		return true;

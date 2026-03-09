@@ -54,6 +54,7 @@
 			user_id: user.id,
 			cockpit_type: prefs.cockpit_type || null,
 			no_teak_decks: prefs.no_teak_decks,
+			no_canoe_stern: prefs.no_canoe_stern,
 			rig_preference: prefs.rig_preference || null,
 			min_loa_ft: prefs.min_loa_ft || null,
 			max_loa_ft: prefs.max_loa_ft || null,
@@ -129,6 +130,23 @@
 							class="peer sr-only"
 							checked={prefs.no_teak_decks}
 							onchange={() => { prefs.no_teak_decks = !prefs.no_teak_decks; update(); }}
+						/>
+						<div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
+					</label>
+				</div>
+
+				<!-- No Canoe Stern -->
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-1">
+						<span class="text-sm text-gray-700">Exclude canoe stern</span>
+						<InfoTip text="Canoe sterns look classic but make it harder to mount solar panels, wind turbines, and dinghy davits. The wave-handling benefit is largely debunked." />
+					</div>
+					<label class="relative inline-flex cursor-pointer items-center">
+						<input
+							type="checkbox"
+							class="peer sr-only"
+							checked={prefs.no_canoe_stern}
+							onchange={() => { prefs.no_canoe_stern = !prefs.no_canoe_stern; update(); }}
 						/>
 						<div class="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
 					</label>
