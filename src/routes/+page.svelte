@@ -126,11 +126,19 @@
 		});
 	});
 
+	function hasCustomPrefs(p: UserPreferences): boolean {
+		return !!(p.cockpit_type || p.no_teak_decks || p.no_canoe_stern || p.rig_preference ||
+			p.min_loa_ft || p.max_loa_ft || p.galley_preference || p.prefer_keel_stepped || p.max_budget);
+	}
+
 	function handleSessionLoad(state: { use_case: string; experience: string; waters: string; preferences: UserPreferences; current_step: number }) {
 		useCase = state.use_case || useCase;
 		experience = state.experience || experience;
 		waters = state.waters || waters;
-		preferences = state.preferences ?? preferences;
+		// Use session preferences if they have custom values, otherwise keep current
+		if (state.preferences && hasCustomPrefs(state.preferences)) {
+			preferences = state.preferences;
+		}
 
 		// Saved sessions always resume to step 4 (Analysis).
 		// A saved session means the user has already picked use case + preferences + designs.
