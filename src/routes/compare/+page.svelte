@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import { boats } from '$lib/seed-data';
 	import { computeScores } from '$lib/scoring';
 	import { supabase } from '$lib/supabase';
@@ -12,7 +14,24 @@
 		{ hex: '#8b5cf6', fill: 'rgba(139,92,246,0.15)', bg: 'bg-purple-500', text: 'text-purple-600', pill: 'bg-purple-50 text-purple-700' }
 	];
 
-	let selected: (Boat | null)[] = $state([null, null, null]);
+	// Initialize from URL params (?b=id1&b=id2&b=id3)
+	const initialIds = page.url.searchParams.getAll('b');
+	let selected: (Boat | null)[] = $state([
+		boats.find((b) => b.id === initialIds[0]) ?? null,
+		boats.find((b) => b.id === initialIds[1]) ?? null,
+		boats.find((b) => b.id === initialIds[2]) ?? null
+	]);
+
+	// Sync URL when selection changes
+	$effect(() => {
+		const ids = selected.filter((b): b is Boat => b !== null).map((b) => b.id);
+		const params = new URLSearchParams();
+		for (const id of ids) params.append('b', id);
+		const newUrl = ids.length > 0 ? `/compare?${params.toString()}` : '/compare';
+		if (newUrl !== `${page.url.pathname}${page.url.search}`) {
+			goto(newUrl, { replaceState: true, keepFocus: true, noScroll: true });
+		}
+	});
 
 	const scoredSelected = $derived(
 		selected
