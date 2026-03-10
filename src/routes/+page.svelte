@@ -107,12 +107,10 @@
 	const user = $derived(getUser());
 	const activeSessionId = $derived(getActiveSessionId());
 
-	let restoringSession = false;
-
 	// Auto-save session state when it changes
 	$effect(() => {
 		const sid = activeSessionId;
-		if (!sid || restoringSession) return;
+		if (!sid) return;
 		// Touch all reactive deps we want to track
 		const _uc = useCase;
 		const _exp = experience;
@@ -127,8 +125,8 @@
 			current_step: _step
 		});
 	});
+
 	function handleSessionLoad(state: { use_case: string; experience: string; waters: string; preferences: UserPreferences; current_step: number }) {
-		restoringSession = true;
 		useCase = state.use_case;
 		experience = state.experience;
 		waters = state.waters;
@@ -145,8 +143,6 @@
 		watchlistLoaded = false;
 		watchlistItems = [];
 		showPrompt = false;
-		// Allow auto-save after this tick completes
-		queueMicrotask(() => { restoringSession = false; });
 	}
 
 	function scoreTextColor(score: number): string {
