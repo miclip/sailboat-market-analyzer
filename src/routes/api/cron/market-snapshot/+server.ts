@@ -84,7 +84,7 @@ export const GET: RequestHandler = async ({ request }) => {
 					{ onConflict: 'boat_design_id,snapshot_date' }
 				);
 
-				results.push({ design: boat.id, count: stats.listing_count });
+				results.push({ design: boat.id, ...stats });
 			}
 		} catch (e) {
 			results.push({
