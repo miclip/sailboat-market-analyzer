@@ -18,16 +18,23 @@
 	let saving = $state(false);
 	let saved = $state(false);
 	let saveError = $state('');
-	let loaded = false; // not reactive — prevents re-triggering
+	let loaded = false;
 
-	// Local copy for editing
+	function hasCustomPrefs(p: UserPreferences): boolean {
+		return !!(p.cockpit_type || p.no_teak_decks || p.no_canoe_stern || p.rig_preference ||
+			p.min_loa_ft || p.max_loa_ft || p.galley_preference || p.prefer_keel_stepped || p.max_budget);
+	}
+
+	// Local copy for editing — start from parent preferences
 	let prefs = $state<UserPreferences>({ ...defaultPreferences, ...preferences });
 
-	// Load preferences from DB once when user becomes available
+	// Load preferences from DB once, but only if parent didn't already provide custom ones
 	$effect(() => {
 		if (user && !loaded) {
 			loaded = true;
-			loadPreferences();
+			if (!hasCustomPrefs(preferences)) {
+				loadPreferences();
+			}
 		}
 	});
 
@@ -40,7 +47,6 @@
 			.maybeSingle();
 
 		if (data) {
-			// Ensure boolean fields are never null (DB may have null for columns added after row creation)
 			const merged = { ...defaultPreferences, ...data };
 			merged.no_teak_decks = data.no_teak_decks ?? defaultPreferences.no_teak_decks;
 			merged.no_canoe_stern = data.no_canoe_stern ?? defaultPreferences.no_canoe_stern;
