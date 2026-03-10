@@ -107,6 +107,8 @@
 	const user = $derived(getUser());
 	const activeSessionId = $derived(getActiveSessionId());
 
+	let restoringSession = false;
+
 	// Auto-save session state when it changes
 	$effect(() => {
 		const sid = activeSessionId;
@@ -125,8 +127,6 @@
 			current_step: _step
 		});
 	});
-
-	let restoringSession = false;
 	function handleSessionLoad(state: { use_case: string; experience: string; waters: string; preferences: UserPreferences; current_step: number }) {
 		restoringSession = true;
 		useCase = state.use_case;
