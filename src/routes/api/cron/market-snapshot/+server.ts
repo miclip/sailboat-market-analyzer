@@ -31,7 +31,16 @@ export const GET: RequestHandler = async ({ request }) => {
 	const authHeader = request.headers.get('authorization');
 	const cronSecret = env.CRON_SECRET;
 	if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
+		return json({
+			error: 'Unauthorized',
+			debug: {
+				hasAuthHeader: !!authHeader,
+				authHeaderPrefix: authHeader?.substring(0, 10),
+				hasCronSecret: !!cronSecret,
+				cronSecretLength: cronSecret?.length,
+				match: authHeader === `Bearer ${cronSecret}`
+			}
+		}, { status: 401 });
 	}
 
 	const apiKey = env.BOATTRADER_API_KEY;
