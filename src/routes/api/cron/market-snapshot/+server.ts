@@ -41,7 +41,7 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	const supabase = getSupabaseAdmin();
 	const selected = shuffle(boats).slice(0, DESIGNS_PER_RUN);
-	const results: Array<{ design: string; count: number; error?: string }> = [];
+	const results: Array<Record<string, unknown>> = [];
 	const today = new Date().toISOString().split('T')[0];
 
 	for (const boat of selected) {

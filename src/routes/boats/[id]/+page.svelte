@@ -15,6 +15,8 @@
 	import PromptOutput from '$lib/components/PromptOutput.svelte';
 	import CompList from '$lib/components/CompList.svelte';
 	import SalePriceForm from '$lib/components/SalePriceForm.svelte';
+	import MarketTrendChart from '$lib/components/MarketTrendChart.svelte';
+	import MarketSummaryCard from '$lib/components/MarketSummaryCard.svelte';
 	import { formatCurrency, formatLabel } from '$lib/utils';
 	import BoatTraderListings from '$lib/components/BoatTraderListings.svelte';
 
@@ -62,6 +64,13 @@
 	if (qsSid) backParams.set('sid', qsSid);
 	const backHref = `/?${backParams.toString()}`;
 
+	// BoatTrader search URL for this design
+	const boatTraderSearchUrl = $derived(
+		boat
+			? `https://www.boattrader.com/boats/?make=${encodeURIComponent(boat.manufacturer)}&model=${encodeURIComponent(btModel)}&type=sail`
+			: ''
+	);
+
 	let showPrompt = $state(false);
 	let useCase = $state(useCaseLabels[qsUc] ?? 'bluewater passage-making');
 	let experience = $state(qsExp || 'intermediate');
@@ -73,7 +82,15 @@
 	let compScores = $state<CompScore[]>([]);
 	let loadingListings = $state(true);
 	let btListings = $state<BoatTraderListing[]>([]);
-	let snapshot = $state<MarketSnapshot | null>(null);
+	let snapshots = $state<MarketSnapshot[]>([]);
+
+	const latestSnapshot = $derived(snapshots.length > 0 ? snapshots[0] : null);
+	const previousSnapshot = $derived(snapshots.length > 1 ? snapshots[1] : null);
+
+	// Tabs for listings section
+	const tabs = ['boattrader', 'community', 'comps'] as const;
+	type Tab = (typeof tabs)[number];
+	let activeTab = $state<Tab>('boattrader');
 
 	function btToPromptListings(bts: BoatTraderListing[]): PromptListingSummary[] {
 		return bts.map((bt) => ({
@@ -132,16 +149,14 @@
 			reportedComps = compData ?? [];
 		}
 
-		// Fetch latest market snapshot
+		// Fetch ALL market snapshots for trend chart
 		const { data: snapshotData } = await supabase
 			.from('market_snapshots')
 			.select('*')
 			.eq('boat_design_id', boat.id)
-			.order('snapshot_date', { ascending: false })
-			.limit(1)
-			.maybeSingle();
+			.order('snapshot_date', { ascending: false });
 
-		snapshot = snapshotData as MarketSnapshot | null;
+		snapshots = (snapshotData ?? []) as MarketSnapshot[];
 
 		loadingListings = false;
 	});
@@ -151,16 +166,31 @@
 
 {#if boat && scores}
 	<div class="space-y-8">
+		<!-- Header -->
 		<div>
 			<a href={backHref} class="mb-4 inline-block text-sm text-blue-600 hover:text-blue-800">
 				&larr; Back to Rankings
 			</a>
-			<h1 class="text-2xl font-bold text-gray-900">{boat.design_name}</h1>
-			<p class="text-gray-500">
-				{boat.manufacturer} &middot; {boat.year_range_start ?? '?'}–{boat.year_range_end ?? '?'}
-			</p>
+			<div class="flex items-start justify-between">
+				<div>
+					<h1 class="text-2xl font-bold text-gray-900">{boat.design_name}</h1>
+					<p class="text-gray-500">
+						{boat.manufacturer} &middot; {boat.year_range_start ?? '?'}–{boat.year_range_end ?? '?'}
+					</p>
+				</div>
+				<a
+					href={boatTraderSearchUrl}
+					target="_blank"
+					rel="noopener noreferrer"
+					class="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+				>
+					Search on BoatTrader
+					<span class="text-xs text-gray-400">&nearr;</span>
+				</a>
+			</div>
 		</div>
 
+		<!-- Design Specs + Score Radar -->
 		<div class="grid gap-8 lg:grid-cols-2">
 			<BoatCard {boat} />
 
@@ -170,137 +200,163 @@
 			</div>
 		</div>
 
+		<!-- Score Breakdown -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="mb-4 text-lg font-semibold text-gray-900">Score Breakdown</h2>
 			<ScoreBreakdown {scores} initialDimension={scoreDimension} />
 		</div>
 
-		<!-- Market snapshot -->
-		{#if snapshot && snapshot.listing_count > 0}
-			<div class="rounded-lg border border-blue-200 bg-blue-50 px-5 py-4">
-				<div class="flex items-center justify-between">
-					<div>
-						<p class="text-sm font-medium text-blue-900">
-							{snapshot.listing_count} currently for sale
-							{#if snapshot.min_price && snapshot.max_price}
-								({formatCurrency(snapshot.min_price)}–{formatCurrency(snapshot.max_price)})
-							{/if}
-						</p>
-						<div class="mt-1 flex flex-wrap gap-4 text-xs text-blue-700">
-							{#if snapshot.median_price}
-								<span>Median: {formatCurrency(snapshot.median_price)}</span>
-							{/if}
-							{#if snapshot.avg_days_on_market != null}
-								<span>Avg days on market: {snapshot.avg_days_on_market}</span>
-							{/if}
-						</div>
-					</div>
-					<span class="text-xs text-blue-500">as of {snapshot.snapshot_date}</span>
-				</div>
-			</div>
-		{/if}
-
-		<!-- BoatTrader listings -->
+		<!-- Market Intelligence -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-			<h2 class="mb-4 text-lg font-semibold text-gray-900">For Sale on BoatTrader</h2>
-			<BoatTraderListings make={boat.manufacturer} model={btModel} boatDesignId={boat.id} sessionId={qsSid || null} onresults={(results) => { btListings = results; }} />
-		</div>
-
-		<!-- Community listings section -->
-		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-			<div class="mb-4 flex items-center justify-between">
-				<h2 class="text-lg font-semibold text-gray-900">Active Listings</h2>
-				<a
-					href="/listings/submit"
-					class="text-sm text-blue-600 hover:text-blue-800"
-				>
-					Submit a listing
-				</a>
-			</div>
-
-			{#if loadingListings}
-				<div class="py-6 text-center">
-					<div class="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
-				</div>
-			{:else if listings.length === 0}
-				<p class="text-sm text-gray-500">No listings yet for this design.</p>
-			{:else}
-				<div class="space-y-3">
-					{#each listings as listing}
-						<div class="rounded-lg border border-gray-100 bg-gray-50 p-4">
-							<div class="flex items-start justify-between">
-								<div>
-									{#if listing.asking_price}
-										<div class="text-lg font-bold text-blue-600">{formatCurrency(listing.asking_price)}</div>
-									{/if}
-									<div class="mt-1 text-sm text-gray-600">
-										{[listing.location_city, listing.location_state].filter(Boolean).join(', ') || 'Location unknown'}
-										{#if listing.location_market}
-											&middot; {formatLabel(listing.location_market)}
-										{/if}
-									</div>
-									<div class="mt-1 text-xs text-gray-500">
-										{#if listing.condition_tier}
-											{formatLabel(listing.condition_tier)}
-										{/if}
-										{#if listing.engine_hours != null}
-											&middot; {listing.engine_hours} engine hrs
-										{/if}
-										{#if listing.rigging_age_years != null}
-											&middot; Rigging: {listing.rigging_age_years}yr
-										{/if}
-									</div>
-								</div>
-								<div class="flex flex-col items-end gap-2">
-									<span
-										class="rounded px-2 py-0.5 text-xs font-medium
-											{listing.status === 'active'
-											? 'bg-green-50 text-green-700'
-											: listing.status === 'sold'
-												? 'bg-gray-100 text-gray-600'
-												: 'bg-yellow-50 text-yellow-700'}"
-									>
-										{formatLabel(listing.status)}
-									</span>
-									{#if listing.yachtworld_url}
-										<a
-											href={listing.yachtworld_url}
-											target="_blank"
-											rel="noopener noreferrer"
-											class="text-xs text-blue-600 hover:text-blue-800"
-										>
-											View on YachtWorld
-										</a>
-									{/if}
-									<button
-										onclick={() =>
-											(showSalePriceForm =
-												showSalePriceForm === listing.id ? null : listing.id)}
-										class="text-xs text-gray-500 hover:text-blue-600"
-									>
-										Report sale price
-									</button>
-								</div>
-							</div>
-							{#if showSalePriceForm === listing.id}
-								<div class="mt-4 border-t border-gray-200 pt-4">
-									<SalePriceForm listingId={listing.id} />
-								</div>
-							{/if}
-						</div>
-					{/each}
+			<h2 class="mb-4 text-lg font-semibold text-gray-900">Market Data</h2>
+			<MarketSummaryCard latest={latestSnapshot} previous={previousSnapshot} {boat} totalSnapshots={snapshots.length} />
+			{#if snapshots.length >= 2}
+				<div class="mt-6">
+					<h3 class="mb-2 text-sm font-medium text-gray-700">Price Trend</h3>
+					<MarketTrendChart {snapshots} />
 				</div>
 			{/if}
 		</div>
 
-		<!-- Comp data section -->
-		{#if !loadingListings && (compScores.length > 0 || reportedComps.length > 0)}
-			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-				<h2 class="mb-4 text-lg font-semibold text-gray-900">Comparable Sales</h2>
-				<CompList {compScores} {reportedComps} />
+		<!-- Tabbed Listings Section -->
+		<div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+			<!-- Tab bar -->
+			<div class="flex border-b border-gray-200 px-6 pt-4">
+				<button
+					onclick={() => (activeTab = 'boattrader')}
+					class="relative px-4 pb-3 text-sm font-medium transition-colors
+						{activeTab === 'boattrader' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}"
+				>
+					BoatTrader
+					{#if btListings.length > 0}
+						<span class="ml-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">{btListings.length}</span>
+					{/if}
+					{#if activeTab === 'boattrader'}
+						<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+					{/if}
+				</button>
+				<button
+					onclick={() => (activeTab = 'community')}
+					class="relative px-4 pb-3 text-sm font-medium transition-colors
+						{activeTab === 'community' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}"
+				>
+					Community Listings
+					{#if listings.length > 0}
+						<span class="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">{listings.length}</span>
+					{/if}
+					{#if activeTab === 'community'}
+						<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+					{/if}
+				</button>
+				{#if !loadingListings && (compScores.length > 0 || reportedComps.length > 0)}
+					<button
+						onclick={() => (activeTab = 'comps')}
+						class="relative px-4 pb-3 text-sm font-medium transition-colors
+							{activeTab === 'comps' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}"
+					>
+						Comparable Sales
+						{#if activeTab === 'comps'}
+							<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
+						{/if}
+					</button>
+				{/if}
 			</div>
-		{/if}
 
+			<!-- Tab content -->
+			<div class="p-6">
+				{#if activeTab === 'boattrader'}
+					<BoatTraderListings make={boat.manufacturer} model={btModel} boatDesignId={boat.id} sessionId={qsSid || null} onresults={(results) => { btListings = results; }} />
+				{:else if activeTab === 'community'}
+					<div class="mb-4 flex items-center justify-between">
+						<span class="text-sm text-gray-500">{listings.length} listing{listings.length !== 1 ? 's' : ''}</span>
+						<a
+							href="/listings/submit"
+							class="text-sm text-blue-600 hover:text-blue-800"
+						>
+							Submit a listing
+						</a>
+					</div>
+
+					{#if loadingListings}
+						<div class="py-6 text-center">
+							<div class="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
+						</div>
+					{:else if listings.length === 0}
+						<p class="text-sm text-gray-500">No listings yet for this design.</p>
+					{:else}
+						<div class="space-y-3">
+							{#each listings as listing}
+								<div class="rounded-lg border border-gray-100 bg-gray-50 p-4">
+									<div class="flex items-start justify-between">
+										<div>
+											{#if listing.asking_price}
+												<div class="text-lg font-bold text-blue-600">{formatCurrency(listing.asking_price)}</div>
+											{/if}
+											<div class="mt-1 text-sm text-gray-600">
+												{[listing.location_city, listing.location_state].filter(Boolean).join(', ') || 'Location unknown'}
+												{#if listing.location_market}
+													&middot; {formatLabel(listing.location_market)}
+												{/if}
+											</div>
+											<div class="mt-1 text-xs text-gray-500">
+												{#if listing.condition_tier}
+													{formatLabel(listing.condition_tier)}
+												{/if}
+												{#if listing.engine_hours != null}
+													&middot; {listing.engine_hours} engine hrs
+												{/if}
+												{#if listing.rigging_age_years != null}
+													&middot; Rigging: {listing.rigging_age_years}yr
+												{/if}
+											</div>
+										</div>
+										<div class="flex flex-col items-end gap-2">
+											<span
+												class="rounded px-2 py-0.5 text-xs font-medium
+													{listing.status === 'active'
+													? 'bg-green-50 text-green-700'
+													: listing.status === 'sold'
+														? 'bg-gray-100 text-gray-600'
+														: 'bg-yellow-50 text-yellow-700'}"
+											>
+												{formatLabel(listing.status)}
+											</span>
+											{#if listing.yachtworld_url}
+												<a
+													href={listing.yachtworld_url}
+													target="_blank"
+													rel="noopener noreferrer"
+													class="text-xs text-blue-600 hover:text-blue-800"
+												>
+													View on YachtWorld
+												</a>
+											{/if}
+											<button
+												onclick={() =>
+													(showSalePriceForm =
+														showSalePriceForm === listing.id ? null : listing.id)}
+												class="text-xs text-gray-500 hover:text-blue-600"
+											>
+												Report sale price
+											</button>
+										</div>
+									</div>
+									{#if showSalePriceForm === listing.id}
+										<div class="mt-4 border-t border-gray-200 pt-4">
+											<SalePriceForm listingId={listing.id} />
+										</div>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
+				{:else if activeTab === 'comps'}
+					<CompList {compScores} {reportedComps} />
+				{/if}
+			</div>
+		</div>
+
+		<!-- Expert Analysis / Prompt Generator -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="mb-2 text-lg font-semibold text-gray-900">Get Expert Analysis</h2>
 			<p class="mb-3 text-sm text-gray-600">
