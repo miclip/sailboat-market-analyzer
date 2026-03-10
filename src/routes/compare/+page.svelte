@@ -183,33 +183,36 @@
 			<CompareRadar entries={radarEntries} />
 		</div>
 
-		<!-- Dimension winners -->
+		<!-- Head to Head with bars -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="mb-4 text-lg font-semibold text-gray-900">Head to Head</h2>
-			<div class="space-y-2">
+			<div class="space-y-5">
 				{#each dimensionResults as { dim, entries, winner, isTie }}
-					<div class="flex items-center gap-3 rounded-lg bg-gray-50 px-4 py-2.5">
-						<span class="w-24 text-sm font-medium text-gray-700">{dim.label}</span>
-						<div class="flex flex-1 items-center gap-2">
-							{#each entries as entry}
-								{@const isWinner = winner && entry.name === winner.name}
-								<div class="flex items-center gap-1.5">
-									<span class="inline-block h-2 w-2 rounded-full" style="background-color: {COLORS[entry.colorIdx].hex}"></span>
-									<span class="text-sm {isWinner ? 'font-bold text-gray-900' : 'text-gray-500'}">
-										{entry.score}
+					<div>
+						<div class="mb-1.5 flex items-center justify-between">
+							<span class="text-sm font-medium text-gray-700">{dim.label}</span>
+							<div>
+								{#if isTie}
+									<span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Tie</span>
+								{:else if winner}
+									<span class="rounded-full px-2.5 py-0.5 text-xs font-medium {COLORS[winner.colorIdx].pill}">
+										{winner.name.length > 20 ? winner.name.substring(0, 18) + '...' : winner.name}
 									</span>
+								{/if}
+							</div>
+						</div>
+						{#each entries as entry}
+							{@const isWinner = winner && entry.name === winner.name}
+							<div class="mb-1 flex items-center gap-2">
+								<div class="h-4 flex-1 overflow-hidden rounded-full bg-gray-100">
+									<div
+										class="h-full rounded-full transition-all"
+										style="width: {entry.score}%; background-color: {COLORS[entry.colorIdx].hex}; opacity: {isWinner || isTie ? 1 : 0.45}"
+									></div>
 								</div>
-							{/each}
-						</div>
-						<div class="w-36 text-right">
-							{#if isTie}
-								<span class="rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Tie</span>
-							{:else if winner}
-								<span class="rounded-full px-2.5 py-0.5 text-xs font-medium {COLORS[winner.colorIdx].pill}">
-									{winner.name.length > 20 ? winner.name.substring(0, 18) + '...' : winner.name}
-								</span>
-							{/if}
-						</div>
+								<span class="w-7 text-right text-xs font-medium {isWinner ? 'text-gray-900' : 'text-gray-400'}">{entry.score}</span>
+							</div>
+						{/each}
 					</div>
 				{/each}
 			</div>
