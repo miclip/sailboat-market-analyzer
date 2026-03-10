@@ -46,9 +46,10 @@ export const GET: RequestHandler = async ({ request }) => {
 
 	for (const boat of selected) {
 		try {
-			// Derive model name by removing manufacturer prefix
+			// Derive model name by removing manufacturer prefix and parenthetical suffixes
 			const model = boat.design_name
 				.replace(new RegExp('^' + boat.manufacturer + '\\s*', 'i'), '')
+				.replace(/\s*\(.*\)\s*$/, '')
 				.trim();
 
 			const params = new URLSearchParams({

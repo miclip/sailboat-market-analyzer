@@ -20,9 +20,9 @@
 
 	const boat = $derived(boats.find((b) => b.id === page.params.id));
 
-	// Extract model name by removing manufacturer prefix from design_name
+	// Extract model name by removing manufacturer prefix and parenthetical suffixes
 	const btModel = $derived(
-		boat ? boat.design_name.replace(new RegExp('^' + boat.manufacturer + '\\s*', 'i'), '') : ''
+		boat ? boat.design_name.replace(new RegExp('^' + boat.manufacturer + '\\s*', 'i'), '').replace(/\s*\(.*\)\s*$/, '') : ''
 	);
 	const scores = $derived(boat ? computeScores(boat) : null);
 
