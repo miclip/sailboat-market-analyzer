@@ -58,7 +58,7 @@
 				colorIdx: s.colorIdx
 			}));
 			const sorted = [...entries].sort((a, b) => b.score - a.score);
-			const isTie = sorted.length > 1 && sorted[0].score - sorted[1].score <= 3;
+			const isTie = sorted.length > 1 && sorted[0].score === sorted[1].score;
 			return { dim, entries, winner: isTie ? null : sorted[0], isTie };
 		})
 	);
