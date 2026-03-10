@@ -110,7 +110,7 @@
 	// Auto-save session state when it changes
 	$effect(() => {
 		const sid = activeSessionId;
-		if (!sid) return;
+		if (!sid || restoringSession) return;
 		// Touch all reactive deps we want to track
 		const _uc = useCase;
 		const _exp = experience;
@@ -126,7 +126,9 @@
 		});
 	});
 
+	let restoringSession = false;
 	function handleSessionLoad(state: { use_case: string; experience: string; waters: string; preferences: UserPreferences; current_step: number }) {
+		restoringSession = true;
 		useCase = state.use_case;
 		experience = state.experience;
 		waters = state.waters;
@@ -136,6 +138,8 @@
 		watchlistLoaded = false;
 		watchlistItems = [];
 		showPrompt = false;
+		// Allow auto-save after this tick completes
+		queueMicrotask(() => { restoringSession = false; });
 	}
 
 	function scoreTextColor(score: number): string {

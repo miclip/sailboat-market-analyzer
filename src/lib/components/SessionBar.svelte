@@ -64,7 +64,8 @@
 	}
 
 	function handleSwitch(sessionId: string) {
-		setActiveSessionId(sessionId);
+		// Restore state BEFORE setting active session ID, so the auto-save
+		// $effect doesn't save stale state (step=1) to the new session
 		const session = sessions.find((s) => s.id === sessionId);
 		if (session) {
 			onload({
@@ -75,6 +76,7 @@
 				current_step: session.current_step
 			});
 		}
+		setActiveSessionId(sessionId);
 		showDropdown = false;
 	}
 
