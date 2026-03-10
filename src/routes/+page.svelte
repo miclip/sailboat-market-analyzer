@@ -133,7 +133,14 @@
 		experience = state.experience;
 		waters = state.waters;
 		preferences = state.preferences;
-		step = state.current_step >= 1 && state.current_step <= 4 ? state.current_step : 1;
+
+		// Infer the minimum step from session data, don't trust current_step
+		// alone since it may have been corrupted by earlier auto-save bugs
+		let inferredStep = 1;
+		if (state.use_case) inferredStep = 3; // has use case → at least designs
+		const savedStep = state.current_step >= 1 && state.current_step <= 4 ? state.current_step : 1;
+		step = Math.max(savedStep, inferredStep);
+
 		// Reset watchlist so it reloads for the new session
 		watchlistLoaded = false;
 		watchlistItems = [];
