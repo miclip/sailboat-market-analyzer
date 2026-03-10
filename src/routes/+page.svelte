@@ -132,10 +132,9 @@
 		waters = state.waters || waters;
 		preferences = state.preferences ?? preferences;
 
-		// Saved sessions always resume to at least step 3 (Designs).
-		// Don't trust current_step — it may have been corrupted to 1 by earlier auto-save bug.
-		const savedStep = state.current_step >= 1 && state.current_step <= 4 ? state.current_step : 3;
-		step = Math.max(savedStep, 3);
+		// Saved sessions always resume to step 4 (Analysis).
+		// A saved session means the user has already picked use case + preferences + designs.
+		step = 4;
 
 		// Reset watchlist so it reloads for the new session
 		watchlistLoaded = false;
