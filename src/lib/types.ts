@@ -222,6 +222,19 @@ export const defaultPreferences: UserPreferences = {
 	prefer_keel_stepped: false
 };
 
+export interface MarketSnapshot {
+	id: string;
+	boat_design_id: string;
+	snapshot_date: string;
+	listing_count: number;
+	min_price: number | null;
+	max_price: number | null;
+	median_price: number | null;
+	avg_days_on_market: number | null;
+	listing_ids: number[];
+	created_at: string;
+}
+
 export type PriceSnapshotStatus = 'active' | 'not_found';
 
 export interface PriceSnapshot {

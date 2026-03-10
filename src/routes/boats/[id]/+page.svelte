@@ -6,7 +6,7 @@
 	import { buildPrompt } from '$lib/prompt-builder';
 	import { supabase } from '$lib/supabase';
 	import { scoreComps } from '$lib/comp-finder';
-	import type { Boat, BoatScores, Listing, Comp, ScoreDimension, PromptListingSummary } from '$lib/types';
+	import type { Boat, BoatScores, Listing, Comp, ScoreDimension, PromptListingSummary, MarketSnapshot } from '$lib/types';
 	import type { CompScore } from '$lib/comp-finder';
 	import type { BoatTraderListing } from '$lib/boattrader';
 	import BoatCard from '$lib/components/BoatCard.svelte';
@@ -73,6 +73,7 @@
 	let compScores = $state<CompScore[]>([]);
 	let loadingListings = $state(true);
 	let btListings = $state<BoatTraderListing[]>([]);
+	let snapshot = $state<MarketSnapshot | null>(null);
 
 	function btToPromptListings(bts: BoatTraderListing[]): PromptListingSummary[] {
 		return bts.map((bt) => ({
@@ -131,6 +132,17 @@
 			reportedComps = compData ?? [];
 		}
 
+		// Fetch latest market snapshot
+		const { data: snapshotData } = await supabase
+			.from('market_snapshots')
+			.select('*')
+			.eq('boat_design_id', boat.id)
+			.order('snapshot_date', { ascending: false })
+			.limit(1)
+			.maybeSingle();
+
+		snapshot = snapshotData as MarketSnapshot | null;
+
 		loadingListings = false;
 	});
 
@@ -163,10 +175,35 @@
 			<ScoreBreakdown {scores} initialDimension={scoreDimension} />
 		</div>
 
+		<!-- Market snapshot -->
+		{#if snapshot && snapshot.listing_count > 0}
+			<div class="rounded-lg border border-blue-200 bg-blue-50 px-5 py-4">
+				<div class="flex items-center justify-between">
+					<div>
+						<p class="text-sm font-medium text-blue-900">
+							{snapshot.listing_count} currently for sale
+							{#if snapshot.min_price && snapshot.max_price}
+								({formatCurrency(snapshot.min_price)}–{formatCurrency(snapshot.max_price)})
+							{/if}
+						</p>
+						<div class="mt-1 flex flex-wrap gap-4 text-xs text-blue-700">
+							{#if snapshot.median_price}
+								<span>Median: {formatCurrency(snapshot.median_price)}</span>
+							{/if}
+							{#if snapshot.avg_days_on_market != null}
+								<span>Avg days on market: {snapshot.avg_days_on_market}</span>
+							{/if}
+						</div>
+					</div>
+					<span class="text-xs text-blue-500">as of {snapshot.snapshot_date}</span>
+				</div>
+			</div>
+		{/if}
+
 		<!-- BoatTrader listings -->
 		<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
 			<h2 class="mb-4 text-lg font-semibold text-gray-900">For Sale on BoatTrader</h2>
-			<BoatTraderListings make={boat.manufacturer} model={btModel} sessionId={qsSid || null} onresults={(results) => { btListings = results; }} />
+			<BoatTraderListings make={boat.manufacturer} model={btModel} boatDesignId={boat.id} sessionId={qsSid || null} onresults={(results) => { btListings = results; }} />
 		</div>
 
 		<!-- Community listings section -->

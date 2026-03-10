@@ -7,11 +7,12 @@
 	interface Props {
 		make: string;
 		model?: string;
+		boatDesignId?: string;
 		sessionId?: string | null;
 		onresults?: (listings: BoatTraderListing[]) => void;
 	}
 
-	let { make, model, sessionId, onresults }: Props = $props();
+	let { make, model, boatDesignId, sessionId, onresults }: Props = $props();
 
 	const user = $derived(getUser());
 
@@ -41,6 +42,17 @@
 					.eq('user_id', user.id)
 					.in('boattrader_id', ids);
 				trackedIds = new Set((data ?? []).map((d) => d.boattrader_id));
+			}
+			// Fire-and-forget market snapshot
+			if (boatDesignId && result.listings.length > 0) {
+				fetch('/api/market-snapshot', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({
+						boat_design_id: boatDesignId,
+						listings: result.listings
+					})
+				}).catch(() => {});
 			}
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to fetch listings';
