@@ -127,17 +127,15 @@
 	});
 
 	function handleSessionLoad(state: { use_case: string; experience: string; waters: string; preferences: UserPreferences; current_step: number }) {
-		useCase = state.use_case;
-		experience = state.experience;
-		waters = state.waters;
-		preferences = state.preferences;
+		useCase = state.use_case || useCase;
+		experience = state.experience || experience;
+		waters = state.waters || waters;
+		preferences = state.preferences ?? preferences;
 
-		// Infer the minimum step from session data, don't trust current_step
-		// alone since it may have been corrupted by earlier auto-save bugs
-		let inferredStep = 1;
-		if (state.use_case) inferredStep = 3; // has use case → at least designs
-		const savedStep = state.current_step >= 1 && state.current_step <= 4 ? state.current_step : 1;
-		step = Math.max(savedStep, inferredStep);
+		// Saved sessions always resume to at least step 3 (Designs).
+		// Don't trust current_step — it may have been corrupted to 1 by earlier auto-save bug.
+		const savedStep = state.current_step >= 1 && state.current_step <= 4 ? state.current_step : 3;
+		step = Math.max(savedStep, 3);
 
 		// Reset watchlist so it reloads for the new session
 		watchlistLoaded = false;
@@ -471,7 +469,7 @@
 	<div class="flex items-center justify-center gap-2">
 		{#each steps as s}
 			<button
-				onclick={() => { if (s.num <= step || (s.num <= 3 && useCase) || (s.num === 4 && useCase)) step = s.num; }}
+				onclick={() => { if (activeSessionId || s.num <= step || (s.num <= 3 && useCase) || (s.num === 4 && useCase)) step = s.num; }}
 				class="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all
 					{step === s.num
 					? 'bg-blue-600 text-white'
