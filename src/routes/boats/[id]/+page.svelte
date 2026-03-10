@@ -171,10 +171,10 @@
 			<a href={backHref} class="mb-4 inline-block text-sm text-blue-600 hover:text-blue-800">
 				&larr; Back to Rankings
 			</a>
-			<div class="flex items-start justify-between">
+			<div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
 				<div>
-					<h1 class="text-2xl font-bold text-gray-900">{boat.design_name}</h1>
-					<p class="text-gray-500">
+					<h1 class="text-xl font-bold text-gray-900 sm:text-2xl">{boat.design_name}</h1>
+					<p class="text-sm text-gray-500 sm:text-base">
 						{boat.manufacturer} &middot; {boat.year_range_start ?? '?'}–{boat.year_range_end ?? '?'}
 					</p>
 				</div>
@@ -182,7 +182,7 @@
 					href={boatTraderSearchUrl}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+					class="inline-flex w-fit items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
 				>
 					Search on BoatTrader
 					<span class="text-xs text-gray-400">&nearr;</span>
@@ -191,7 +191,7 @@
 		</div>
 
 		<!-- Design Specs + Score Radar -->
-		<div class="grid gap-8 lg:grid-cols-2">
+		<div class="grid gap-4 sm:gap-8 lg:grid-cols-2">
 			<BoatCard {boat} />
 
 			<div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
@@ -221,15 +221,15 @@
 		<!-- Tabbed Listings Section -->
 		<div class="rounded-lg border border-gray-200 bg-white shadow-sm">
 			<!-- Tab bar -->
-			<div class="flex border-b border-gray-200 px-6 pt-4">
+			<div class="flex overflow-x-auto border-b border-gray-200 px-3 pt-4 sm:px-6">
 				<button
 					onclick={() => (activeTab = 'boattrader')}
-					class="relative px-4 pb-3 text-sm font-medium transition-colors
+					class="relative whitespace-nowrap px-3 pb-3 text-xs font-medium transition-colors sm:px-4 sm:text-sm
 						{activeTab === 'boattrader' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}"
 				>
 					BoatTrader
 					{#if btListings.length > 0}
-						<span class="ml-1.5 rounded-full bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">{btListings.length}</span>
+						<span class="ml-1 rounded-full bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">{btListings.length}</span>
 					{/if}
 					{#if activeTab === 'boattrader'}
 						<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
@@ -237,12 +237,12 @@
 				</button>
 				<button
 					onclick={() => (activeTab = 'community')}
-					class="relative px-4 pb-3 text-sm font-medium transition-colors
+					class="relative whitespace-nowrap px-3 pb-3 text-xs font-medium transition-colors sm:px-4 sm:text-sm
 						{activeTab === 'community' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}"
 				>
-					Community Listings
+					Community
 					{#if listings.length > 0}
-						<span class="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">{listings.length}</span>
+						<span class="ml-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-xs text-gray-600">{listings.length}</span>
 					{/if}
 					{#if activeTab === 'community'}
 						<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
@@ -251,10 +251,10 @@
 				{#if !loadingListings && (compScores.length > 0 || reportedComps.length > 0)}
 					<button
 						onclick={() => (activeTab = 'comps')}
-						class="relative px-4 pb-3 text-sm font-medium transition-colors
+						class="relative whitespace-nowrap px-3 pb-3 text-xs font-medium transition-colors sm:px-4 sm:text-sm
 							{activeTab === 'comps' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'}"
 					>
-						Comparable Sales
+						Comps
 						{#if activeTab === 'comps'}
 							<div class="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></div>
 						{/if}
@@ -263,7 +263,7 @@
 			</div>
 
 			<!-- Tab content -->
-			<div class="p-6">
+			<div class="p-4 sm:p-6">
 				{#if activeTab === 'boattrader'}
 					<BoatTraderListings make={boat.manufacturer} model={btModel} boatDesignId={boat.id} sessionId={qsSid || null} onresults={(results) => { btListings = results; }} />
 				{:else if activeTab === 'community'}

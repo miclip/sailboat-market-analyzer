@@ -465,18 +465,18 @@
 	/>
 
 	<!-- Step indicator -->
-	<div class="flex items-center justify-center gap-2">
+	<div class="flex items-center justify-center gap-1 sm:gap-2">
 		{#each steps as s}
 			<button
 				onclick={() => { if (activeSessionId || s.num <= step || (s.num <= 3 && useCase) || (s.num === 4 && useCase)) step = s.num; }}
-				class="flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all
+				class="flex items-center gap-1 rounded-full px-2 py-1.5 text-xs font-medium transition-all sm:gap-2 sm:px-4 sm:py-2 sm:text-sm
 					{step === s.num
 					? 'bg-blue-600 text-white'
 					: step > s.num
 						? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
 						: 'bg-gray-100 text-gray-400'}"
 			>
-				<span class="flex h-6 w-6 items-center justify-center rounded-full text-xs
+				<span class="flex h-5 w-5 items-center justify-center rounded-full text-[10px] sm:h-6 sm:w-6 sm:text-xs
 					{step === s.num
 					? 'bg-blue-500 text-white'
 					: step > s.num
@@ -485,10 +485,10 @@
 				>
 					{s.num}
 				</span>
-				{s.label}
+				<span class="hidden xs:inline sm:inline">{s.label}</span>
 			</button>
 			{#if s.num < steps.length}
-				<div class="h-px w-8 {step > s.num ? 'bg-blue-300' : 'bg-gray-200'}"></div>
+				<div class="h-px w-4 sm:w-8 {step > s.num ? 'bg-blue-300' : 'bg-gray-200'}"></div>
 			{/if}
 		{/each}
 	</div>
