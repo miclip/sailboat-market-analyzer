@@ -46,7 +46,11 @@
 	);
 
 	// Handle client-side navigations (e.g. Home click, back from boat detail)
+	// Skip the very first afterNavigate (initial page load) to avoid resetting state
+	let navCount = 0;
 	afterNavigate(({ to }) => {
+		navCount++;
+		if (navCount <= 1) return; // Skip initial load
 		if (!to?.url) return;
 		const params = to.url.searchParams;
 		const qsStep = Number(params.get('step')) || 0;
