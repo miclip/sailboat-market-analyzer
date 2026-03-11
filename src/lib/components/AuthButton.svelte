@@ -19,6 +19,11 @@
 			error = result.error;
 		} else {
 			sent = true;
+			setTimeout(() => {
+				sent = false;
+				showForm = false;
+				email = '';
+			}, 6000);
 		}
 	}
 
@@ -40,7 +45,10 @@
 		</button>
 	</div>
 {:else if sent}
-	<div class="text-sm text-green-600">Check your email for the login link.</div>
+	<div class="text-sm text-green-600">
+		Check your email for the magic link — also check junk/spam.
+		<span class="text-xs text-gray-400 ml-1">From: noreply@mail.app.supabase.io</span>
+	</div>
 {:else if showForm}
 	<form onsubmit={handleSubmit} class="flex items-center gap-2">
 		<input
