@@ -121,6 +121,20 @@ export function parseRecord(r: BTRecord): BoatTraderListing {
 	};
 }
 
+/**
+ * Check if a listing's model matches the searched model.
+ * BoatTrader does fuzzy matching, so "Maramu" returns "Super Maramu" too.
+ * We require the listing model to start with the search model (word boundary).
+ */
+function modelMatches(listingModel: string, searchModel: string): boolean {
+	const lm = listingModel.toLowerCase().trim();
+	const sm = searchModel.toLowerCase().trim();
+	if (!sm) return true;
+	if (lm === sm) return true;
+	// Listing model starts with search model followed by a space, digit, or end
+	return new RegExp(`^${sm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|\\d|$)`, 'i').test(lm);
+}
+
 export async function searchListings(
 	make: string,
 	model?: string,
@@ -145,10 +159,14 @@ export async function searchListings(
 
 	const data = await res.json();
 	const records: BTRecord[] = data.search?.records ?? [];
-	const listings = records.map(parseRecord);
+	let listings = records.map(parseRecord);
+
+	if (model) {
+		listings = listings.filter((l) => modelMatches(l.model, model));
+	}
 
 	return {
 		listings,
-		total: data.search?.count ?? 0
+		total: listings.length
 	};
 }

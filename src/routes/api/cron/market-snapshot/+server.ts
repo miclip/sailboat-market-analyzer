@@ -3,7 +3,7 @@ import { env } from '$env/dynamic/private';
 import type { RequestHandler } from './$types';
 import { getSupabaseAdmin } from '$lib/supabase-server';
 import { computeSnapshotStats } from '$lib/snapshot-utils';
-import { parseRecord } from '$lib/boattrader';
+import { parseRecord, type BoatTraderListing } from '$lib/boattrader';
 import { boats } from '$lib/seed-data';
 
 export const config = { maxDuration: 300 };
@@ -72,7 +72,17 @@ export const GET: RequestHandler = async ({ request }) => {
 			} else {
 				const data = await res.json();
 				const records = data.search?.records ?? [];
-				const listings = records.map(parseRecord);
+				let listings = records.map(parseRecord);
+
+				// Filter out fuzzy matches (e.g. "Maramu" search returning "Super Maramu")
+				if (model) {
+					const sm = model.toLowerCase();
+					listings = listings.filter((l: BoatTraderListing) => {
+						const lm = l.model.toLowerCase().trim();
+						return lm === sm || new RegExp(`^${sm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\s|\\d|$)`, 'i').test(lm);
+					});
+				}
+
 				const stats = computeSnapshotStats(listings);
 
 				await supabase.from('market_snapshots').upsert(
