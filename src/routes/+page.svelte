@@ -633,6 +633,23 @@
 	<!-- Step 4: Your Listings + Prompt -->
 	{#if step === 4}
 		<section class="space-y-8">
+			<!-- Sailing Profile Summary -->
+			{#if useCase || experience || waters}
+				<div class="flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 px-4 py-3 text-sm text-gray-600">
+					<span class="font-medium text-gray-700">Your Profile:</span>
+					{#if useCase}
+						<span class="rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">{useCaseLabels[useCase] ?? formatLabel(useCase)}</span>
+					{/if}
+					{#if experience}
+						<span class="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700">{formatLabel(experience)}</span>
+					{/if}
+					{#if waters}
+						<span class="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-700">{waters}</span>
+					{/if}
+					<button onclick={() => (step = 1)} class="ml-auto text-xs text-gray-400 hover:text-blue-600">Edit</button>
+				</div>
+			{/if}
+
 			<div class="flex items-start justify-between">
 				<div>
 					<h1 class="mb-2 text-2xl font-bold text-gray-900">Your Tracked Listings</h1>

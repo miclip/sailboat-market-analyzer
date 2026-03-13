@@ -73,22 +73,33 @@ export function saveSessionDebounced(
 ) {
 	if (saveTimer) clearTimeout(saveTimer);
 	saveTimer = setTimeout(async () => {
+		// Only include profile fields if they have values — never overwrite with null
+		const updates: Record<string, unknown> = {
+			preferences: state.preferences ?? defaultPreferences,
+			current_step: state.current_step ?? 1,
+			updated_at: new Date().toISOString()
+		};
+		if (state.use_case) updates.use_case = state.use_case;
+		if (state.experience) updates.experience = state.experience;
+		if (state.waters) updates.waters = state.waters;
+
 		await supabase
 			.from('exploration_sessions')
-			.update({
-				use_case: state.use_case || null,
-				experience: state.experience || null,
-				waters: state.waters || null,
-				preferences: state.preferences ?? defaultPreferences,
-				current_step: state.current_step ?? 1,
-				updated_at: new Date().toISOString()
-			})
+			.update(updates)
 			.eq('id', sessionId);
 
-		// Update local copy
+		// Update local copy — only override fields we actually sent
 		sessions = sessions.map((s) =>
 			s.id === sessionId
-				? { ...s, ...state, updated_at: new Date().toISOString() }
+				? {
+					...s,
+					...(state.use_case ? { use_case: state.use_case } : {}),
+					...(state.experience ? { experience: state.experience } : {}),
+					...(state.waters ? { waters: state.waters } : {}),
+					preferences: state.preferences ?? s.preferences,
+					current_step: state.current_step ?? s.current_step,
+					updated_at: new Date().toISOString()
+				}
 				: s
 		) as ExplorationSession[];
 	}, 1000);
