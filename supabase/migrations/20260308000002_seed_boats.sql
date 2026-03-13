@@ -108,3 +108,28 @@ INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_e
 VALUES
   ('beneteau-oceanis-390', 'Beneteau Oceanis 390', 'Beneteau', 1988, 1995, 39.0, 13.0, 16500, 5500, 0.33, 33.5, 730, 18.2, 'spade', 'fin', 'deck_stepped', 'sloop', 'aft', 'fin_keel', NULL, 'cut_away', 24.0, 2.15, 185, true, false, false, 'Production cruiser. Capable coastal cruiser but not ideal for extended offshore. Light displacement, fast in moderate conditions.', NULL)
 ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('little-harbor-38', 'Little Harbor 38', 'Little Harbor', 1982, 1988, 38.0, 11.83, 20600, 8400, 0.41, 31.0, 739, 15.8, 'spade', 'centerboard', 'keel_stepped', 'sloop', 'aft', 'modified_full', NULL, 'moderate', 35.81, 1.73, 309, true, false, false, 'Ted Hood design. 31 hulls built by Lien Hwa. Centerboard with lead ballast for shoal-draft versatility. Excellent build quality and seakeeping.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('little-harbor-44', 'Little Harbor 44', 'Little Harbor', 1983, 1987, 44.33, 13.67, 32500, 13800, 0.42, 36.5, 937, 14.78, 'spade', 'centerboard', 'keel_stepped', 'sloop', 'aft', 'modified_full', NULL, 'moderate', 39.72, 1.72, 298, true, false, false, 'Ted Hood design. 15 hulls built. High ballast ratio (42.5%) and centerboard for exceptional stability and shoal-draft access.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('little-harbor-46', 'Little Harbor 46', 'Little Harbor', 1986, 1992, 45.67, 13.75, 32500, 13800, 0.42, 36.5, 966, 15.24, 'spade', 'centerboard', 'keel_stepped', 'cutter', 'aft', 'modified_full', NULL, 'moderate', 39.01, 1.73, 298, true, false, false, 'Ted Hood design. 21 hulls built. Cutter rig for bluewater versatility. Centerboard — 5ft board up, 10ft board down.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('little-harbor-50', 'Little Harbor 50', 'Little Harbor', 1982, NULL, 50.75, 15.08, 43200, 18000, 0.42, 42.17, 1250, 16.32, 'spade', 'centerboard', 'keel_stepped', 'sloop', 'aft', 'modified_full', NULL, 'moderate', 40.23, 1.72, 257, true, false, true, 'Ted Hood design. Semi-custom bluewater cruiser. Centerboard — 5.5ft board up, 11.5ft board down. 330 gallon water capacity.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('little-harbor-54', 'Little Harbor 54', 'Little Harbor', 1989, NULL, 54.0, 15.0, 62359, 19000, 0.30, 43.17, 1272, 13.0, 'spade', 'centerboard', 'keel_stepped', 'sloop', 'center', 'modified_full', NULL, 'moderate', 56.38, 1.52, 346, true, true, true, 'Ted Hood design. Flagship heavy-displacement bluewater cruiser. Exceptional motion comfort (56.4) and capsize screening (1.52). Center cockpit.', NULL)
+ON CONFLICT (id) DO NOTHING;
