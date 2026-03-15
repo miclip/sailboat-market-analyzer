@@ -133,3 +133,28 @@ INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_e
 VALUES
   ('little-harbor-54', 'Little Harbor 54', 'Little Harbor', 1989, NULL, 54.0, 15.0, 62359, 19000, 0.30, 43.17, 1272, 13.0, 'spade', 'centerboard', 'keel_stepped', 'sloop', 'center', 'modified_full', NULL, 'moderate', 56.38, 1.52, 346, true, true, true, 'Ted Hood design. Flagship heavy-displacement bluewater cruiser. Exceptional motion comfort (56.4) and capsize screening (1.52). Center cockpit.', NULL)
 ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('alden-44', 'Alden 44', 'Alden', 1976, 1991, 44.16, 12.5, 24500, 10000, 0.41, 34.08, 871, 16.59, 'skeg_hung', 'centerboard', 'keel_stepped', 'cutter', 'aft', 'modified_full', NULL, 'moderate', 35.31, 1.72, 276, true, false, false, 'Alden Associates / Nils Helleberg design. 40 hulls built by Tillotson Pearson. Centerboard cutter — 4.9ft board up, 8.75ft board down.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('alden-44-mkii', 'Alden 44 MkII', 'Alden', 1981, NULL, 44.16, 12.46, 24500, 10000, 0.41, 34.92, 871, 16.59, 'skeg_hung', 'centerboard', 'keel_stepped', 'sloop', 'aft', 'modified_full', NULL, 'moderate', 34.91, 1.72, 257, true, false, false, 'Updated Alden 44 with modified rudder/skeg, repositioned propeller shaft, and revised interior. Sloop rig replaces original cutter.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('alden-46', 'Alden 46', 'Alden', 1987, 1997, 47.67, 13.5, 32000, 13000, 0.41, 37.08, 1076, 17.15, 'skeg_hung', 'centerboard', 'keel_stepped', 'sloop', 'aft', 'modified_full', NULL, 'moderate', 38.38, 1.70, 280, true, false, false, 'Niels Helleberg design. Centerboard — 5.3ft board up, 10.1ft board down. High ballast ratio with good SA/D balance.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('alden-50', 'Alden 50', 'Alden', 1996, 1998, 50.33, 13.5, 38000, 16300, 0.43, 37.08, 1092, 15.52, 'skeg_hung', 'centerboard', 'keel_stepped', 'sloop', 'aft', 'modified_full', NULL, 'moderate', 44.68, 1.61, 333, true, false, false, 'Alden Yachts design. Only 3 built. Highest ballast ratio in the Alden line. Excellent comfort ratio (44.7).', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('alden-54', 'Alden 54', 'Alden', 1985, 2002, 54.08, 14.33, 36500, 15000, 0.41, 40.0, 1221, 17.83, 'skeg_hung', 'centerboard', 'keel_stepped', 'cutter', 'aft', 'modified_full', NULL, 'moderate', 36.81, 1.73, 255, true, false, false, 'Alden design. Cutter rig with best SA/D in the line (17.83). Long production run 1985-2002.', NULL)
+ON CONFLICT (id) DO NOTHING;
