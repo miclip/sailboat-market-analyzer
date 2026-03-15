@@ -39,6 +39,14 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Browse Sailboat Designs | Sailboat Market Analyzer</title>
+	<meta name="description" content="Browse {boats.length} sailboat designs scored for bluewater, coastal cruising, singlehand sailing, and liveaboard use cases. Filter by manufacturer and sort by score." />
+	<meta property="og:title" content="Browse Sailboat Designs" />
+	<meta property="og:description" content="Browse {boats.length} sailboat designs scored for bluewater, coastal cruising, singlehand sailing, and liveaboard." />
+	<meta property="og:type" content="website" />
+</svelte:head>
+
 <div>
 	<h1 class="mb-6 text-2xl font-bold text-gray-900">Browse Designs</h1>
 

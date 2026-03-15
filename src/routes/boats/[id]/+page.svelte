@@ -164,6 +164,18 @@
 	let showSalePriceForm = $state<string | null>(null);
 </script>
 
+<svelte:head>
+	{#if boat}
+		<title>{boat.design_name} | Sailboat Market Analyzer</title>
+		<meta name="description" content="{boat.design_name} by {boat.manufacturer} ({boat.year_range_start}–{boat.year_range_end}). Scores, specs, market data, and live BoatTrader listings." />
+		<meta property="og:title" content="{boat.design_name} — Sailboat Market Analyzer" />
+		<meta property="og:description" content="{boat.design_name} by {boat.manufacturer}. Bluewater, coastal, and singlehand scores with live market data." />
+		<meta property="og:type" content="website" />
+	{:else}
+		<title>Design Not Found | Sailboat Market Analyzer</title>
+	{/if}
+</svelte:head>
+
 {#if boat && scores}
 	<div class="space-y-8">
 		<!-- Header -->

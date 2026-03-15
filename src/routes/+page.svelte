@@ -14,6 +14,8 @@
 	import { formatLabel, formatCurrency, formatNumber } from '$lib/utils';
 	import PromptOutput from '$lib/components/PromptOutput.svelte';
 
+	const description = 'Find the perfect sailboat for your sailing style. Score and compare bluewater, coastal, and liveaboard designs with live market data and AI analysis.';
+
 	interface ScoredBoat {
 		boat: Boat;
 		scores: BoatScores;
@@ -460,6 +462,17 @@
 		{ num: 4, label: 'Your Listings' }
 	];
 </script>
+
+<svelte:head>
+	<title>Sailboat Market Analyzer</title>
+	<meta name="description" content={description} />
+	<meta property="og:title" content="Sailboat Market Analyzer" />
+	<meta property="og:description" content={description} />
+	<meta property="og:type" content="website" />
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content="Sailboat Market Analyzer" />
+	<meta name="twitter:description" content={description} />
+</svelte:head>
 
 <div class="space-y-8">
 	<!-- Session bar -->

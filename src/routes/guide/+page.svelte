@@ -1,3 +1,11 @@
+<svelte:head>
+	<title>How to Use | Sailboat Market Analyzer</title>
+	<meta name="description" content="Step-by-step guide to finding, evaluating, and comparing bluewater sailboats. Learn about scoring, preferences, sessions, and AI-powered analysis." />
+	<meta property="og:title" content="How to Use Sailboat Market Analyzer" />
+	<meta property="og:description" content="Step-by-step guide to finding and evaluating bluewater sailboats with scoring, market data, and AI analysis." />
+	<meta property="og:type" content="article" />
+</svelte:head>
+
 <div class="mx-auto max-w-3xl space-y-10">
 	<div>
 		<h1 class="mb-3 text-3xl font-bold text-gray-900">How to Use Sailboat Market Analyzer</h1>

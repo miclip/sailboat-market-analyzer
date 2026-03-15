@@ -127,6 +127,11 @@
 	});
 </script>
 
+<svelte:head>
+	<title>Your Tracked Listings | Sailboat Market Analyzer</title>
+	<meta name="description" content="Track sailboat listings from BoatTrader with price alerts and availability status." />
+</svelte:head>
+
 <div class="space-y-6">
 	<div class="flex items-center justify-between">
 		<div>

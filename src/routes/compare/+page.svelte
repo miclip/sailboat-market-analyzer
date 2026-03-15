@@ -138,6 +138,14 @@
 	);
 </script>
 
+<svelte:head>
+	<title>Compare Sailboat Designs | Sailboat Market Analyzer</title>
+	<meta name="description" content="Compare up to 3 sailboat designs side-by-side with overlaid radar charts, head-to-head scores, market data, and detailed specifications." />
+	<meta property="og:title" content="Compare Sailboat Designs" />
+	<meta property="og:description" content="Side-by-side comparison of sailboat designs with scores, market data, and specs." />
+	<meta property="og:type" content="website" />
+</svelte:head>
+
 <div class="space-y-8">
 	<h1 class="text-2xl font-bold text-gray-900">Compare Designs</h1>
 
