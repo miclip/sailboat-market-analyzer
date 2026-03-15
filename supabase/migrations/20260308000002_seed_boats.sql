@@ -248,3 +248,28 @@ INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_e
 VALUES
   ('morris-40', 'Morris 40', 'Morris', 1995, NULL, 40.92, 12.58, 19400, NULL, NULL, 32.0, 757, 16.84, 'skeg_hung', 'modified_fin', 'keel_stepped', 'cutter', 'aft', 'modified_full', NULL, 'moderate', 29.67, 1.88, 264, true, false, false, 'Chuck Paine design. Built by Morris Yachts (Maine). Cutter rig, shallow draft (5.25ft).', NULL)
 ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('beneteau-oceanis-45', 'Beneteau Oceanis 45', 'Beneteau', 2013, NULL, 45.42, 14.75, 21048, NULL, NULL, 42.0, 1076, 22.67, 'spade', 'bulb_fin', 'deck_stepped', 'sloop', 'aft', 'fin_keel', NULL, 'cut_away', 20.99, 2.14, 127, true, false, false, 'Finot-Conq / Nauta Design. High-volume French production cruiser. Very light displacement, fast but not comfortable offshore.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('jeanneau-sun-odyssey-44i', 'Jeanneau Sun Odyssey 44i', 'Jeanneau', 2009, NULL, 45.11, 14.34, 21892, 6512, 0.30, 37.57, 1082, 22.21, 'spade', 'bulb_fin', 'deck_stepped', 'sloop', 'aft', 'fin_keel', NULL, 'cut_away', 24.49, 2.05, 184, true, false, false, 'Philippe Briand design. French production cruiser. Low ballast ratio (29.8%). Wide beam for interior volume.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('hanse-445', 'Hanse 445', 'Hanse', 2010, NULL, 44.36, 14.37, 24251, 7716, 0.32, 40.03, 1021, 19.58, 'spade', 'bulb_fin', 'deck_stepped', 'sloop', 'aft', 'fin_keel', NULL, 'cut_away', 26.07, 1.99, 169, true, false, false, 'Judel/Vrolijk design. German production cruiser. Self-tacking jib option.', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('dufour-460-grand-large', 'Dufour 460 Grand Large', 'Dufour', 2016, NULL, 46.42, 14.76, 23721, 6283, 0.26, 41.14, 1073, 20.88, 'spade', 'bulb_fin', 'deck_stepped', 'sloop', 'aft', 'fin_keel', NULL, 'cut_away', 23.80, 2.06, 152, true, false, false, 'Umberto Felci design. French production cruiser. Lowest ballast ratio in the fleet (26.5%).', NULL)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO boats (id, design_name, manufacturer, year_range_start, year_range_end, length_ft, beam_ft, displacement_lbs, ballast_lbs, ballast_ratio, lwl_ft, sail_area_sqft, sa_displacement_ratio, rudder_type, keel_type, mast_step, rig_type, cockpit_type, hull_type, underbody_pct, forefoot_depth, motion_comfort_ratio, capsize_screening_value, displacement_length_ratio, self_steering_compatible, watermaker_standard, generator_standard, notes, source_url)
+VALUES
+  ('bavaria-cruiser-46', 'Bavaria Cruiser 46', 'Bavaria', 2014, NULL, 46.82, 14.27, 27778, 7694, 0.28, 42.45, 1162, 20.35, 'spade', 'bulb_fin', 'deck_stepped', 'sloop', 'aft', 'fin_keel', NULL, 'cut_away', 28.47, 1.89, 162, true, false, false, 'Farr Yacht Design. German production cruiser. Dual rudders, cast iron ballast.', NULL)
+ON CONFLICT (id) DO NOTHING;
