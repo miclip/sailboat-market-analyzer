@@ -8,6 +8,7 @@
 	let loading = $state(true);
 	let refreshing = $state(false);
 	let error = $state('');
+	let unavailable = $state('');
 	let loaded = $state(false);
 
 	const user = $derived(getUser());
@@ -44,12 +45,25 @@
 		if (!user || items.length === 0) return;
 		refreshing = true;
 		error = '';
+		unavailable = '';
 
 		try {
 			const { fetchListingById } = await import('$lib/listing-lookup');
+			const { isListingsUnavailable } = await import('$lib/boattrader');
 
 			for (const item of items) {
-				const match = await fetchListingById(item.boattrader_id);
+				// An outage must never be recorded as a delisting: bail out before any
+				// write rather than marking every tracked boat gone.
+				let match;
+				try {
+					match = await fetchListingById(item.boattrader_id);
+				} catch (e) {
+					if (isListingsUnavailable(e)) {
+						unavailable = e.message;
+						break;
+					}
+					throw e;
+				}
 
 				const newPrice = match?.priceUSD ?? null;
 				const priceChanged =
@@ -189,6 +203,16 @@
 		{#if error}
 			<div class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
 				{error}
+			</div>
+		{/if}
+
+		{#if unavailable}
+			<div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+				<p class="text-sm font-medium text-amber-900">Prices not refreshed</p>
+				<p class="mt-1 text-sm text-amber-800">
+					{unavailable} Your tracked listings below are unchanged — the prices and
+					statuses shown are from the last successful check.
+				</p>
 			</div>
 		{/if}
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { BoatTraderListing } from '$lib/boattrader';
+	import { isListingsUnavailable, type BoatTraderListing } from '$lib/boattrader';
 	import { formatCurrency, formatNumber } from '$lib/utils';
 
 	interface Props {
@@ -11,6 +11,7 @@
 	let url = $state('');
 	let loading = $state(false);
 	let error = $state('');
+	let unavailable = $state('');
 	let listing = $state<BoatTraderListing | null>(null);
 
 	async function handleLookup() {
@@ -18,6 +19,7 @@
 
 		loading = true;
 		error = '';
+		unavailable = '';
 		listing = null;
 
 		try {
@@ -46,7 +48,11 @@
 				listing = result;
 			}
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to fetch listing';
+			if (isListingsUnavailable(e)) {
+				unavailable = e.message;
+			} else {
+				error = e instanceof Error ? e.message : 'Failed to fetch listing';
+			}
 		}
 
 		loading = false;
@@ -79,6 +85,22 @@
 	{#if error}
 		<div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
 			{error}
+		</div>
+	{/if}
+
+	{#if unavailable}
+		<div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-4">
+			<p class="text-sm font-medium text-amber-900">Lookup unavailable</p>
+			<p class="mt-1 text-sm text-amber-800">
+				{unavailable} You can still add this boat by hand — open the listing, then use the
+				submit form to enter its details.
+			</p>
+			<a
+				href="/listings/submit"
+				class="mt-3 inline-block text-sm font-medium text-amber-900 underline hover:text-amber-700"
+			>
+				Enter listing details manually
+			</a>
 		</div>
 	{/if}
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { searchListings, type BoatTraderListing } from '$lib/boattrader';
+	import { searchListings, isListingsUnavailable, type BoatTraderListing } from '$lib/boattrader';
 	import { supabase } from '$lib/supabase';
 	import { getUser } from '$lib/auth.svelte';
 	import { formatCurrency, formatNumber } from '$lib/utils';
@@ -21,12 +21,14 @@
 	let loading = $state(false);
 	let searched = $state(false);
 	let error = $state('');
+	let unavailable = $state('');
 	let trackedIds = $state<Set<number>>(new Set());
 	let trackingId = $state<number | null>(null);
 
 	async function handleSearch() {
 		loading = true;
 		error = '';
+		unavailable = '';
 		try {
 			const result = await searchListings(make, model);
 			listings = result.listings;
@@ -55,7 +57,11 @@
 				}).catch(() => {});
 			}
 		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to fetch listings';
+			if (isListingsUnavailable(e)) {
+				unavailable = e.message;
+			} else {
+				error = e instanceof Error ? e.message : 'Failed to fetch listings';
+			}
 		}
 		loading = false;
 		searched = true;
@@ -126,6 +132,22 @@
 		<div class="py-6 text-center">
 			<div class="mx-auto h-6 w-6 animate-spin rounded-full border-4 border-gray-300 border-t-blue-500"></div>
 			<p class="mt-2 text-sm text-gray-500">Searching BoatTrader...</p>
+		</div>
+	{:else if unavailable}
+		<div class="rounded-lg border border-amber-200 bg-amber-50 px-4 py-4">
+			<p class="text-sm font-medium text-amber-900">Live listings unavailable</p>
+			<p class="mt-1 text-sm text-amber-800">
+				{unavailable} Everything else on this page — specs, scoring, and comparisons —
+				is unaffected.
+			</p>
+			<a
+				href="https://www.boattrader.com/boats/sail/"
+				target="_blank"
+				rel="noopener noreferrer"
+				class="mt-3 inline-block text-sm font-medium text-amber-900 underline hover:text-amber-700"
+			>
+				Search BoatTrader directly
+			</a>
 		</div>
 	{:else if error}
 		<div class="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>

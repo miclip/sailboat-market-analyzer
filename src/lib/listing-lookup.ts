@@ -1,4 +1,9 @@
-import { parseRecord, type BoatTraderListing } from './boattrader';
+import {
+	ListingsUnavailableError,
+	parseRecord,
+	readProxyResponse,
+	type BoatTraderListing
+} from './boattrader';
 
 const LISTING_URL_PATTERN = /^https?:\/\/www\.(yachtworld|boattrader)\.com\//;
 const LISTING_ID_PATTERN = /(\d+)\/?(?:\?.*)?$/;
@@ -37,21 +42,27 @@ export function extractListingId(url: string): number | null {
 
 /**
  * Fetch a single listing from the BoatTrader API by its numeric ID.
- * Returns null if the listing is not found.
+ *
+ * Returns null ONLY when the upstream answered successfully and the listing is
+ * genuinely absent — i.e. it really was removed. Any failure to reach the
+ * upstream throws ListingsUnavailableError instead, so callers that persist
+ * listing status can tell "this boat sold" apart from "BoatTrader is blocking
+ * us today" and refuse to write in the second case.
  */
 export async function fetchListingById(id: number): Promise<BoatTraderListing | null> {
-	const res = await fetch(`/api/boattrader?id=${id}`);
-
-	if (!res.ok) {
-		throw new Error(`BoatTrader API error: ${res.status}`);
+	let res: Response;
+	try {
+		res = await fetch(`/api/boattrader?id=${id}`);
+	} catch {
+		throw new ListingsUnavailableError();
 	}
 
-	const data = await res.json();
-	const records = data.search?.records ?? [];
+	const data = await readProxyResponse(res);
+	const records = (data.search as { records?: unknown[] })?.records ?? [];
 
 	if (records.length === 0) {
 		return null;
 	}
 
-	return parseRecord(records[0]);
+	return parseRecord(records[0] as Parameters<typeof parseRecord>[0]);
 }

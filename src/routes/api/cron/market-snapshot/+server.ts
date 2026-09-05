@@ -8,7 +8,9 @@ import { boats } from '$lib/seed-data';
 
 export const config = { maxDuration: 300 };
 
-const API_BASE = 'https://api-gateway.boats.com/api-boattrader-client/app/search/boat';
+// Moved off api-gateway.boats.com (now 404s) to BoatTrader's main origin, which
+// is behind a WAF that rejects server-side callers. See api/boattrader/+server.ts.
+const API_BASE = 'https://www.boattrader.com/app/search/boat';
 const FIELDS =
 	'id,make,model,year,price,location,specifications,portalLink,propulsion,hullMaterial,fuelType,description,media,dateCreated';
 const DESIGNS_PER_RUN = 10;
@@ -43,6 +45,7 @@ export const GET: RequestHandler = async ({ request }) => {
 	const selected = shuffle(boats).slice(0, DESIGNS_PER_RUN);
 	const results: Array<Record<string, unknown>> = [];
 	const today = new Date().toISOString().split('T')[0];
+	let unavailable = '';
 
 	for (const boat of selected) {
 		try {
@@ -64,11 +67,22 @@ export const GET: RequestHandler = async ({ request }) => {
 			if (model) params.set('model', model);
 
 			const res = await fetch(`${API_BASE}?${params}`, {
-				headers: { Accept: 'application/json' }
+				headers: { Accept: 'application/json' },
+				signal: AbortSignal.timeout(20_000)
 			});
 
 			if (!res.ok) {
 				results.push({ design: boat.id, count: 0, error: `HTTP ${res.status}` });
+				// 403/429/5xx is the upstream refusing us as a class, not a per-design
+				// miss. Stop the run instead of sleeping between more certain failures.
+				if (res.status === 403 || res.status === 429 || res.status >= 500) {
+					unavailable = `Upstream returned ${res.status}`;
+					break;
+				}
+			} else if (!(res.headers.get('content-type') ?? '').includes('application/json')) {
+				results.push({ design: boat.id, count: 0, error: 'Non-JSON response' });
+				unavailable = 'Upstream returned a non-JSON body (WAF challenge?)';
+				break;
 			} else {
 				const data = await res.json();
 				const records = data.search?.records ?? [];
@@ -108,6 +122,20 @@ export const GET: RequestHandler = async ({ request }) => {
 		if (selected.indexOf(boat) < selected.length - 1) {
 			await sleep(3000 + Math.random() * 7000);
 		}
+	}
+
+	if (unavailable) {
+		console.error(`[cron/market-snapshot] aborted: ${unavailable}`);
+		return json(
+			{
+				error: 'BoatTrader upstream unavailable — no snapshots written.',
+				detail: unavailable,
+				processed: results.length,
+				attempted: selected.length,
+				results
+			},
+			{ status: 503 }
+		);
 	}
 
 	return json({ processed: results.length, results });

@@ -1,3 +1,49 @@
+/**
+ * Thrown when the BoatTrader upstream cannot be reached at all — blocked by
+ * their WAF, down, or timed out.
+ *
+ * Deliberately distinct from a search that succeeds and returns no records.
+ * Callers that write listing status (the watchlist refresh) MUST NOT treat this
+ * as "the boat is gone" — doing so would mark every tracked listing delisted
+ * during an upstream outage.
+ */
+export class ListingsUnavailableError extends Error {
+	constructor(message = 'Live BoatTrader listings are temporarily unavailable.') {
+		super(message);
+		this.name = 'ListingsUnavailableError';
+	}
+}
+
+/** Narrow an unknown caught value to an upstream-unavailable failure. */
+export function isListingsUnavailable(e: unknown): e is ListingsUnavailableError {
+	return e instanceof ListingsUnavailableError;
+}
+
+/**
+ * Read a response from /api/boattrader, converting the proxy's structured
+ * unavailability signal into a typed throw.
+ */
+export async function readProxyResponse(res: Response): Promise<Record<string, unknown>> {
+	let body: Record<string, unknown> = {};
+	try {
+		body = await res.json();
+	} catch {
+		throw new ListingsUnavailableError();
+	}
+
+	if (body.unavailable) {
+		throw new ListingsUnavailableError(
+			typeof body.error === 'string' ? body.error : undefined
+		);
+	}
+
+	if (!res.ok) {
+		throw new Error(typeof body.error === 'string' ? body.error : `Request failed: ${res.status}`);
+	}
+
+	return body;
+}
+
 export interface BoatTraderListing {
 	id: number;
 	make: string;
@@ -151,14 +197,15 @@ export async function searchListings(
 		params.set('model', model);
 	}
 
-	const res = await fetch(`/api/boattrader?${params}`);
-
-	if (!res.ok) {
-		throw new Error(`BoatTrader search failed: ${res.status}`);
+	let res: Response;
+	try {
+		res = await fetch(`/api/boattrader?${params}`);
+	} catch {
+		throw new ListingsUnavailableError();
 	}
 
-	const data = await res.json();
-	const records: BTRecord[] = data.search?.records ?? [];
+	const data = await readProxyResponse(res);
+	const records: BTRecord[] = (data.search as { records?: BTRecord[] })?.records ?? [];
 	let listings = records.map(parseRecord);
 
 	if (model) {
