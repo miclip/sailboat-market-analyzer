@@ -12,6 +12,9 @@ node_modules
 .DS_Store
 Thumbs.db
 
+# Claude Code (local session state and worktrees)
+.claude
+
 # Env
 .env
 .env.*
